@@ -4,13 +4,13 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   return (
-    <>
-    <View style={styles.container}>
-      <Text>Login Screen</Text>
-      <StatusBar style="auto" />
-    </View>
     <SafeAreaProvider>
-        <SafeAreaView style={styles.centerContainerBase}>
+        <SafeAreaView style={styles.container}>
+
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Login</Text>
+            </View>
+
             <TextInput style={styles.input} placeholder="Username" />
             <TextInput style={styles.input} placeholder="Password" secureTextEntry={true} />
 
@@ -23,7 +23,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
         </SafeAreaView>
     </SafeAreaProvider>
-    </>
   );
 }
 
@@ -32,11 +31,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  centerContainerBase: {
+  container: {
     flex: 1,
     backgroundColor: '#f0d4b0ff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  header: {
+      marginBottom: 40,
+  },
+  headerTitle: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: '#4A6572',
   },
   input: {
     borderColor: 'darkgray',
