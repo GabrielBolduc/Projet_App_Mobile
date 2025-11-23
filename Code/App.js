@@ -9,6 +9,6 @@ import { Settings } from 'react-native';
 
 export default function App() {
   return (
-    <FeedScreen />
+    <MyRatingsScreen />
   );
 }
