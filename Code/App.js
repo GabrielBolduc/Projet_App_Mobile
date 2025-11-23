@@ -5,9 +5,10 @@ import MovieListScreen from './movieList_screen';
 import MyRatingsScreen from './myRatings_screen';
 import RateMovieScreen from './rateMovie_screen';
 import SettingsScreen from './settings_screen';
+import { Settings } from 'react-native';
 
 export default function App() {
   return (
-    <SettingsScreen />
+    <FeedScreen />
   );
 }

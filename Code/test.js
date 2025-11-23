@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -7,6 +7,7 @@ const PRIMARY_COLOR = '#4A6572';
 const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#888';
 
+// --- DONNÉES SIMULÉES (MOCK DATA) ---
 
 const POPULAR_MOVIES_DATA = [
   { id: 1, title: 'Dune: Part Two', duration: 166, director: 'Denis Villeneuve' },
@@ -14,6 +15,7 @@ const POPULAR_MOVIES_DATA = [
   { id: 3, title: 'Barbie', duration: 114, director: 'Greta Gerwig' },
 ];
 
+// Simulation d'une requête SQL qui joint Ratings + User + Count(Reaction)
 const RATINGS_FEED_DATA = [
   {
     id: 101, 
@@ -21,10 +23,12 @@ const RATINGS_FEED_DATA = [
     username: 'Sophie', 
     movie_title: 'Dune: Part Two',
     rating: 5, 
-    comment: 'Tres bon film, mauvaise fin', 
+    comment: 'Un chef d\'oeuvre absolu. La fin me laisse encore perplexe !', 
     created_at: '2025-11-23 09:30:00',
+    // Ces données viendraient d'un COUNT() sur la table Reaction groupé par type
     initialLikes: 12,
     initialDislikes: 0,
+    currentUserReaction: 'like', // Simule que J'AI déjà liké ce post (table Reaction)
   },
   {
     id: 102,
@@ -32,27 +36,29 @@ const RATINGS_FEED_DATA = [
     username: 'Marc',
     movie_title: 'The Batman',
     rating: 4,
-    comment: 'Tres sombre, un peu long mais bien filmer.',
+    comment: 'Très sombre, un peu long mais visuellement incroyable.',
     created_at: '2025-11-22 18:45:00',
     initialLikes: 8,
-    initialDislikes: 1
+    initialDislikes: 1,
+    currentUserReaction: null, // Je n'ai pas encore réagi
   },
   {
     id: 103,
     user_id: 52,
-    username: '',
-    movie_title: 'Dazed and Confused',
+    username: 'Julie',
+    movie_title: 'Mean Girls',
     rating: 3,
-    comment: 'Excellement mais si a mal vieilli.',
+    comment: 'Sympa pour la nostalgie, mais a mal vieilli.',
     created_at: '2025-11-20 14:00:00',
-    initialLikes: 4,
-    initialDislikes: 2,
-    currentUserReaction: 'like', 
+    initialLikes: 2,
+    initialDislikes: 4,
+    currentUserReaction: 'dislike', // J'ai disliké ce post
   },
 ];
 
+// --- COMPOSANTS UTILITAIRES ---
 
-function StarRating({ rating }) {
+const StarRating = ({ rating }) => {
   const stars = [];
   for (let i = 1; i <= 5; i++) {
     stars.push(
@@ -66,25 +72,29 @@ function StarRating({ rating }) {
     );
   }
   return <View style={{ flexDirection: 'row' }}>{stars}</View>;
-}
+};
 
-// Review follower
-function ReviewCard({ item }) {
-  const [reactionState, setReactionState] = useState(item.currentUserReaction); 
+// --- COMPOSANT CARTE AVIS (Gère sa propre logique de réaction) ---
+const ReviewCard = ({ item }) => {
+  // État local pour simuler l'interaction immédiate
+  const [reactionState, setReactionState] = useState(item.currentUserReaction); // 'like', 'dislike', ou null
   const [likesCount, setLikesCount] = useState(item.initialLikes);
   const [dislikesCount, setDislikesCount] = useState(item.initialDislikes);
 
+  // Logique pour respecter la contrainte UNIQUE(user_id, rating_id)
+  // On ne peut pas avoir un like et un dislike en même temps
   const handleReaction = (type) => {
     if (reactionState === type) {
+      // Si on clique sur la même réaction, on l'enlève (DELETE)
       setReactionState(null);
       if (type === 'like') setLikesCount(prev => prev - 1);
       else setDislikesCount(prev => prev - 1);
     } else {
-        
+      // Si on change de réaction ou qu'on ajoute une nouvelle
       if (reactionState === 'like' && type === 'dislike') {
-        setLikesCount(prev => prev - 1);
+        setLikesCount(prev => prev - 1); // Enlever l'ancien like
       } else if (reactionState === 'dislike' && type === 'like') {
-        setDislikesCount(prev => prev - 1);
+        setDislikesCount(prev => prev - 1); // Enlever l'ancien dislike
       }
 
       setReactionState(type);
@@ -95,20 +105,23 @@ function ReviewCard({ item }) {
 
   return (
     <View style={styles.reviewCard}>
-      {/* header */}
+      {/* Header */}
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
+          <View style={styles.avatar}>
+            <Text style={{color:'#fff', fontWeight:'bold'}}>{item.username.charAt(0)}</Text>
+          </View>
           <View>
             <Text style={styles.userName}>{item.username}</Text>
             <Text style={styles.timestamp}>
-                {new Date(item.created_at).toLocaleDateString('fr-CA')}
+                {new Date(item.created_at).toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' })}
             </Text>
           </View>
         </View>
         <Ionicons name="ellipsis-horizontal" size={20} color={SUBTLE_COLOR} />
       </View>
 
-      {/* content */}
+      {/* Contenu */}
       <View style={styles.cardContent}>
         <Text style={styles.movieTitle}>{item.movie_title}</Text>
         <View style={styles.ratingContainer}>
@@ -117,8 +130,10 @@ function ReviewCard({ item }) {
         <Text style={styles.commentText}>{item.comment}</Text>
       </View>
 
-      {/* footer */}
+      {/* Footer : Réactions (Like / Dislike) */}
       <View style={styles.cardFooter}>
+        
+        {/* BOUTON LIKE */}
         <TouchableOpacity 
           style={styles.reactionButton} 
           onPress={() => handleReaction('like')}
@@ -136,6 +151,7 @@ function ReviewCard({ item }) {
           </Text>
         </TouchableOpacity>
 
+        {/* BOUTON DISLIKE */}
         <TouchableOpacity 
           style={styles.reactionButton} 
           onPress={() => handleReaction('dislike')}
@@ -143,7 +159,7 @@ function ReviewCard({ item }) {
           <Ionicons 
             name={reactionState === 'dislike' ? "thumbs-down" : "thumbs-down-outline"} 
             size={20} 
-            color={reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR} 
+            color={reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR} // Rouge si dislike actif
           />
           <Text style={[
             styles.reactionCount, 
@@ -152,12 +168,14 @@ function ReviewCard({ item }) {
             {dislikesCount}
           </Text>
         </TouchableOpacity>
+
       </View>
     </View>
   );
-}
+};
 
-export default function Feed() {
+// --- ECRAN FEED PRINCIPAL ---
+const FeedScreen = () => {
 
   const renderPopularItem = ({ item }) => (
     <TouchableOpacity style={styles.popularCard}>
@@ -180,7 +198,7 @@ export default function Feed() {
         <FlatList
           data={RATINGS_FEED_DATA}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <ReviewCard item={item} />}
+          renderItem={({ item }) => <ReviewCard item={item} />} // Utilisation du composant séparé
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           
@@ -202,7 +220,7 @@ export default function Feed() {
       </SafeAreaView>
     </SafeAreaProvider>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -326,6 +344,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontSize: 14,
   },
+  // Nouveau Footer avec Like/Dislike
   cardFooter: {
     flexDirection: 'row',
     borderTopWidth: 1,
@@ -336,7 +355,7 @@ const styles = StyleSheet.create({
   reactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 25, 
+    marginRight: 25, // Espace entre Like et Dislike
   },
   reactionCount: {
     marginLeft: 6,
@@ -344,3 +363,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+
+export default FeedScreen;
