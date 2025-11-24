@@ -29,14 +29,13 @@ const Item = ({ name }) => (
 export default function FollowScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-        {/* LE HEADER MANUEL A ÉTÉ SUPPRIMÉ ICI */}
 
         <View style={styles.listContainer}>
             <FlatList
                 data={FOLLOWERS}
                 renderItem={({ item }) => <Item name={item.name} />}
                 keyExtractor={item => item.id}
-                contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }} // Ajout d'un peu de padding top car le header n'est plus là pour pousser le contenu
+                contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }}
             />
         </View>
 
@@ -53,7 +52,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
     },
-    // styles.headerContainer et styles.screenTitle supprimés
     listContainer: {
         flex: 1,
         paddingHorizontal: 20,

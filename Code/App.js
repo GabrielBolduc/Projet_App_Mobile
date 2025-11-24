@@ -1,22 +1,90 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { TouchableOpacity } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+
 import LoginScreen from './login_screen';
 import SignupScreen from './signup_screen';
 import FollowScreen from './follow_screen';
 import RecommendationScreen from './recommendation_screen';
 
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-export default function App() {
+const PRIMARY_COLOR = '#4A6572';
+
+function MyTabs({ navigation }) {
   return (
-    <RecommendationScreen />
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerRight: () => (
+          <TouchableOpacity 
+            onPress={() => navigation.replace('Login')}
+            style={{ marginRight: 15 }}
+          >
+            <Ionicons name="log-out-outline" size={26} color="#D32F2F" />
+          </TouchableOpacity>
+        ),
+        tabBarActiveTintColor: PRIMARY_COLOR,
+        tabBarInactiveTintColor: 'gray',
+        tabBarStyle: { paddingBottom: 5, height: 60 },
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Recommendations') {
+            iconName = focused ? 'film' : 'film-outline';
+          } else if (route.name === 'Friends') {
+            iconName = focused ? 'people' : 'people-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen 
+        name="Recommendations" 
+        component={RecommendationScreen} 
+        options={{ title: 'Recommandations' }} 
+      />
+      <Tab.Screen 
+        name="Friends" 
+        component={FollowScreen} 
+        options={{ title: 'Amis' }} 
+      />
+    </Tab.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login">
+        
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen} 
+          options={{ headerShown: false }} 
+        />
+        
+        <Stack.Screen 
+          name="Signup" 
+          component={SignupScreen} 
+          options={{ 
+            title: '', 
+            headerTransparent: true, 
+            headerTintColor: PRIMARY_COLOR 
+          }} 
+        />
+
+        <Stack.Screen 
+          name="Home" 
+          component={MyTabs} 
+          options={{ headerShown: false }} 
+        />
+        
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
