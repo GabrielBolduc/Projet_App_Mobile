@@ -1,116 +1,102 @@
 import React from "react";
-
 import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+const PRIMARY_COLOR = '#4A6572';
+
 const RECOMMENDATIONS = [
-    { id: '1', name: 'Inglorious Basterds', reason: 'Because you watched Django Unchained', reaction: '😎' },
+    { id: '1', name: 'Inglorious Basterds', reason: 'Because you watched Django', reaction: '😎' },
     { id: '2', name: 'Pulp Fiction', reason: 'Good classic movie', reaction: '🔥' },
-    { id: '3', name: 'The Dark Knight', reason: 'Because you watched Batman Begins', reaction: '🦇' },
-    { id: '4', name: 'Forrest Gump', reason: 'Highly rated drama', reaction: '❤️' },
-    { id: '5', name: 'The Matrix', reason: 'Because you liked Inception', reaction: '🤯' },
-    { id: '6', name: 'The Shawshank Redemption', reason: 'Top rated movie', reaction: '🏆' },
+    { id: '3', name: 'The Dark Knight', reason: 'You liked Batman Begins', reaction: '🦇' },
 ];
 
-
 const Item = ({ name, reason, reaction }) => (
-    <View style={styles.item}>
-        
+    <View style={styles.card}>
+        <View style={styles.iconContainer}>
+            <Text style={{fontSize: 24}}>{reaction}</Text>
+        </View>
         <View style={styles.textContainer}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', paddingBottom: 10 }}>User recommend you:</Text>
             <Text style={styles.title}>{name}</Text>
             <Text style={styles.reason}>{reason}</Text>
-            <Text style={{ fontSize: 24, paddingTop: 10 }}>{reaction}</Text>
         </View>
+        <Ionicons name="chevron-forward" size={20} color="#ccc" />
     </View>
 );
 
-const RecommendationsList = () => {
-    if (RECOMMENDATIONS.length === 0) {
-        return <Text>No recommendations available.</Text>;
-    } else {
-        return (
-            <FlatList styles={styles.list}
-                data={RECOMMENDATIONS}
-                renderItem={({ item }) => <Item name={item.name} reason={item.reason} reaction={item.reaction} />}
-                keyExtractor={item => item.id}
-            />
-        );
-    }
-}
-
 export default function RecommendationScreen() {
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
 
-        <View style={styles.header}>
-            <Text style={styles.headerTitle}>Recommend by your followers</Text>
-        </View>
+        <FlatList
+            data={RECOMMENDATIONS}
+            renderItem={({ item }) => <Item name={item.name} reason={item.reason} reaction={item.reaction} />}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+        />
 
-        <View style={styles.recommendationsSection}>
-            <RecommendationsList />
-        </View>
-
-        <View style={{ position: 'absolute', bottom: 20, right: 20 }}>
-            <TouchableOpacity style={[styles.buttonAddRecom, { height: 55, width: 55, borderRadius: 27.5 }]}>
-                <Ionicons name="add" size={32} color="#4A6572" />
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.fab}>
+            <Ionicons name="add" size={30} color="#fff" />
+        </TouchableOpacity>
 
       </SafeAreaView>
-    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: '#F5F5F5',
     },
-    header: {
-        marginTop: 20,
-        marginBottom: 20,
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#4A6572',
-    },
-    recommendationsSection: {
-        width: '50%',
-        height: '50%',
-        marginTop: 20,
-    },
-    item: {
-        backgroundColor: '#f3ca89ff',
-        borderWidth: 3,
-        borderColor: 'darkgray',
+    listContent: {
         padding: 20,
-        marginVertical: 16,
-        borderRadius: 10,
+    },
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 15,
+        marginBottom: 12,
         flexDirection: 'row',
         alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    iconContainer: {
+        width: 50, 
+        height: 50, 
+        borderRadius: 25, 
+        backgroundColor: '#F0F0F0', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        marginRight: 15
     },
     textContainer: {
-        marginLeft: 16,
+        flex: 1,
     },
     title: {
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: 'bold',
-        color: '#4A6572',
+        color: '#333',
     },
     reason: {
-        fontSize: 18,
-        color: '#4A6572',
+        fontSize: 14,
+        color: '#666',
+        marginTop: 2,
     },
-    buttonAddRecom: {
-        backgroundColor: '#f3ca89ff',
+    fab: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        backgroundColor: PRIMARY_COLOR,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
+        elevation: 5,
+        shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3,
     },
 });
