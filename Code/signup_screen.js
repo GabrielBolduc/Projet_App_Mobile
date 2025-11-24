@@ -7,7 +7,6 @@ const PRIMARY_COLOR = '#4A6572';
 
 export default function SignupScreen({ navigation }) {
 
-  // Simulation d'état pour la photo de profil (vide ou remplie)
   const [hasProfilePic, setHasProfilePic] = useState(false);
 
   const handleAvatarPress = () => {
@@ -23,7 +22,6 @@ export default function SignupScreen({ navigation }) {
                 <Text style={styles.subTitle}>Rejoignez la communauté !</Text>
             </View>
 
-            {/* Section Photo de profil modernisée */}
             <View style={styles.profileSection}>
                 <TouchableOpacity style={styles.avatarContainer} onPress={handleAvatarPress}>
                     {hasProfilePic ? (
@@ -31,7 +29,6 @@ export default function SignupScreen({ navigation }) {
                     ) : (
                         <Ionicons name="camera-outline" size={40} color="#999" />
                     )}
-                    {/* Petit indicateur "+" */}
                     <View style={styles.addIconBadge}>
                         <Ionicons name="add" size={16} color="#fff" />
                     </View>
@@ -41,7 +38,6 @@ export default function SignupScreen({ navigation }) {
                 </Text>
             </View>
 
-            {/* Formulaire */}
             <View style={styles.inputContainer}>
                 <TextInput 
                     style={styles.input} 
@@ -64,7 +60,6 @@ export default function SignupScreen({ navigation }) {
             
             <TouchableOpacity 
                 style={styles.primaryButton}
-                // Ici, on pourrait imaginer une navigation vers Home après validation
                 onPress={() => navigation.replace('Home')}
             >
                 <Text style={styles.primaryButtonText}>S'inscrire</Text>
@@ -120,7 +115,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     marginBottom: 10,
-    // Ombre légère
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2,
   },
   addIconBadge: {

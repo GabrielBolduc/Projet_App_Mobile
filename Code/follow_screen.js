@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+const PRIMARY_COLOR = '#4A6572';
 
 const FOLLOWERS = [
     { id: '1', name: 'John Doe' },
@@ -12,113 +13,97 @@ const FOLLOWERS = [
 ];
 
 const Item = ({ name }) => (
-    <View style={styles.item}>
-        <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle-outline" size={32} color="#4A6572" />
+    <View style={styles.card}>
+        <View style={styles.userInfo}>
+            <View style={styles.avatarContainer}>
+                <Ionicons name="person" size={24} color="#fff" />
+            </View>
+            <Text style={styles.title}>{name}</Text>
         </View>
-        <Text style={styles.title}>{name}</Text>
-        <TouchableOpacity style={styles.RemoveButton}>
-            <Ionicons name="close-circle" size={32} color="red" />
+        <TouchableOpacity>
+            <Ionicons name="close-circle-outline" size={28} color="#D32F2F" />
         </TouchableOpacity>
     </View>
 );
 
-const FollowersList = () => {
-    if (FOLLOWERS.length === 0) {
-        return <Text>No followers yet.</Text>;
-    } else {
-        return (
-            <FlatList styles={styles.list}
+export default function FollowScreen() {
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+        {/* LE HEADER MANUEL A ÉTÉ SUPPRIMÉ ICI */}
+
+        <View style={styles.listContainer}>
+            <FlatList
                 data={FOLLOWERS}
                 renderItem={({ item }) => <Item name={item.name} />}
                 keyExtractor={item => item.id}
+                contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }} // Ajout d'un peu de padding top car le header n'est plus là pour pousser le contenu
             />
-        );
-    }
-}
+        </View>
 
-export default function FollowScreen() {
-  return (
-    <SafeAreaProvider>
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Your Followers</Text>
-            </View>
+        <TouchableOpacity style={styles.fab}>
+            <Ionicons name="person-add" size={24} color="#fff" />
+        </TouchableOpacity>
 
-            <View style={styles.followersSection}>
-                <FollowersList />
-            </View>
-
-            <View style={styles.addFollower}>
-                <TouchableOpacity style={[styles.addFollowerButton, { height: 55, width: 200}] }>
-                    <Ionicons name="person-add-outline" size={24} color="#4A6572" />
-                </TouchableOpacity>
-            </View>
-
-        </SafeAreaView>
-    </SafeAreaProvider>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f0d4b0ff',
+        backgroundColor: '#F5F5F5',
+    },
+    // styles.headerContainer et styles.screenTitle supprimés
+    listContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 15,
+        marginBottom: 10,
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    header: {
-        marginBottom: 40,
-    },
-    headerTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#4A6572',
-    },
-    followersSection: {
-        width: '50%',
-        height: '50%',
-        marginTop: 20,
-    },
-    item: {
-        backgroundColor: '#f3ca89ff',
-        borderWidth: 3,
-        borderColor: 'darkgray',
-        padding: 20,
-        marginVertical: 8,
-        borderRadius: 10,
-    },
-    title: {
-        textAlign: 'center',
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
-    RemoveButton: {
-        position: 'absolute',
-        right: 5,
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     avatarContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24, 
-        borderWidth: 2,
-        borderColor: '#4A6572', 
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: PRIMARY_COLOR,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        marginRight: 16,
+        marginRight: 15,
     },
-    addFollower: {
-        marginTop: 30,
+    title: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
     },
-    addFollowerButton: {
-        backgroundColor: '#f3ca89ff',
-        borderWidth: 3,
-        borderColor: 'darkgray',
-        padding: 20,
-        marginVertical: 8,
-        borderRadius: 10,
+    fab: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        backgroundColor: PRIMARY_COLOR,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
     },
-}); 
+});
