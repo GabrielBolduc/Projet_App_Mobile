@@ -6,10 +6,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const PRIMARY_COLOR = '#4A6572';
 
 const FOLLOWERS = [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'Alice Johnson' },
-    { id: '4', name: 'Bob Brown' },
+    { id: '1', name: 'Utilisateur 1' },
+    { id: '2', name: 'Utilisateur 2' },
+    { id: '3', name: 'Utilisateur 3' },
+    { id: '4', name: 'Utilisateur 4' },
+    { id: '5', name: 'Utilisateur 5' },
+    { id: '6', name: 'Utilisateur 6' },
+    { id: '7', name: 'Utilisateur 7' },
+    { id: '8', name: 'Utilisateur 8' },
+    { id: '9', name: 'Utilisateur 9' },
+    { id: '10', name: 'Utilisateur 10' },
 ];
 
 const Item = ({ name }) => (
@@ -28,16 +34,15 @@ const Item = ({ name }) => (
 
 export default function FollowScreen() {
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-
-        <View style={styles.listContainer}>
-            <FlatList
-                data={FOLLOWERS}
-                renderItem={({ item }) => <Item name={item.name} />}
-                keyExtractor={item => item.id}
-                contentContainerStyle={{ paddingBottom: 100, paddingTop: 20 }}
-            />
-        </View>
+    <SafeAreaView style={styles.container}>
+        
+        <FlatList
+            data={FOLLOWERS}
+            renderItem={({ item }) => <Item name={item.name} />}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+        />
 
         <TouchableOpacity style={styles.fab}>
             <Ionicons name="person-add" size={24} color="#fff" />
@@ -52,9 +57,9 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
     },
-    listContainer: {
-        flex: 1,
-        paddingHorizontal: 20,
+    listContent: {
+        padding: 20,
+        paddingBottom: 80,
     },
     card: {
         backgroundColor: '#fff',
@@ -64,6 +69,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        // Ombres
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,

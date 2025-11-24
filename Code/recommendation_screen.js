@@ -6,31 +6,55 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const PRIMARY_COLOR = '#4A6572';
 
 const RECOMMENDATIONS = [
-    { id: '1', name: 'Inglorious Basterds', reason: 'Because you watched Django', reaction: '😎' },
-    { id: '2', name: 'Pulp Fiction', reason: 'Good classic movie', reaction: '🔥' },
-    { id: '3', name: 'The Dark Knight', reason: 'You liked Batman Begins', reaction: '🦇' },
+    { id: '1', user: 'Thomas', name: 'Inglorious Basterds', reason: 'Car tu as aimé Django Unchained', reaction: '😎' },
+    { id: '2', user: 'Sarah', name: 'Pulp Fiction', reason: 'Un classique absolu à voir', reaction: '🔥' },
+    { id: '3', user: 'Mike', name: 'The Dark Knight', reason: 'Puisque tu es fan de Nolan', reaction: '🦇' },
 ];
 
-const Item = ({ name, reason, reaction }) => (
+const Item = ({ user, name, reason, reaction }) => (
     <View style={styles.card}>
-        <View style={styles.iconContainer}>
-            <Text style={{fontSize: 24}}>{reaction}</Text>
+        {/* L'utilisateur qui recommande */}
+        <View style={styles.cardHeader}>
+            <Ionicons name="person-circle" size={34} color={PRIMARY_COLOR} style={{ marginRight: 8 }} />
+            <Text style={styles.headerText}>
+                <Text style={styles.username}>{user}</Text> vous recommande :
+            </Text>
         </View>
-        <View style={styles.textContainer}>
-            <Text style={styles.title}>{name}</Text>
-            <Text style={styles.reason}>{reason}</Text>
+
+        {/* Nom du film */}
+        <View style={styles.movieContainer}>
+            <Ionicons name="film-outline" size={20} color="#666" style={{ marginRight: 8 }} />
+            <Text style={styles.movieTitle}>{name}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#ccc" />
+
+        <View style={styles.divider} />
+
+        {/* Raison */}
+        <Text style={styles.labelText}>Raison :</Text>
+        <Text style={styles.reasonText}>{reason}</Text>
+
+        {/* Réaction */}
+        <View style={styles.reactionContainer}>
+            <Text style={styles.labelText}>Réaction :</Text>
+            <Text style={styles.reactionEmoji}>{reaction}</Text>
+        </View>
     </View>
 );
 
 export default function RecommendationScreen() {
   return (
-      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-
+      <SafeAreaView style={styles.container}>
+        
         <FlatList
             data={RECOMMENDATIONS}
-            renderItem={({ item }) => <Item name={item.name} reason={item.reason} reaction={item.reaction} />}
+            renderItem={({ item }) => (
+                <Item 
+                    user={item.user} 
+                    name={item.name} 
+                    reason={item.reason} 
+                    reaction={item.reaction} 
+                />
+            )}
             keyExtractor={item => item.id}
             contentContainerStyle={styles.listContent}
         />
@@ -50,41 +74,70 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: 20,
+        paddingBottom: 80,
     },
     card: {
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 15,
-        marginBottom: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 15,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
     },
-    iconContainer: {
-        width: 50, 
-        height: 50, 
-        borderRadius: 25, 
-        backgroundColor: '#F0F0F0', 
-        justifyContent: 'center', 
+    cardHeader: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 15
+        marginBottom: 10,
     },
-    textContainer: {
-        flex: 1,
-    },
-    title: {
+    headerText: {
         fontSize: 16,
+        color: '#555',
+    },
+    username: {
+        fontWeight: 'bold',
+        color: PRIMARY_COLOR,
+    },
+    movieContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    movieTitle: {
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#333',
     },
-    reason: {
+    divider: {
+        height: 2,
+        backgroundColor: '#F0F0F0',
+        marginVertical: 10,
+    },
+    labelText: {
         fontSize: 14,
-        color: '#666',
-        marginTop: 2,
+        color: '#888',
+        fontStyle: 'italic',
+        marginBottom: 4,
+    },
+    reasonText: {
+        fontSize: 16,
+        color: '#444',
+        marginBottom: 15,
+        lineHeight: 22,
+    },
+    reactionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9F9F9',
+        padding: 8,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+    reactionEmoji: {
+        fontSize: 24,
+        marginLeft: 10,
     },
     fab: {
         position: 'absolute',
