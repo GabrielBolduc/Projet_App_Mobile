@@ -24,7 +24,7 @@ export default function Settings() {
               <Ionicons name="person-outline" size={60} color={PRIMARY_COLOR} />
             </View>
             <TouchableOpacity>
-              <Text style={styles.editPhotoText}>Changer la photo</Text>
+              <Text style={styles.editPhotoText}>Change the photo</Text>
             </TouchableOpacity>
           </View>
 
@@ -42,11 +42,11 @@ export default function Settings() {
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.saveButton}>
-              <Text style={styles.saveButtonText}>Sauvegarder</Text>
+              <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.logoutButton}>
-              <Text style={styles.logoutButtonText}>Deconnexion</Text>
+              <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>

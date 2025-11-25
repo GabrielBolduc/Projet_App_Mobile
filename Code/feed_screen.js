@@ -9,9 +9,9 @@ const SUBTLE_COLOR = '#888';
 
 
 const POPULAR_MOVIES_DATA = [
-  { id: 1, title: 'Dune: Part Two', duration: 166, director: 'Denis Villeneuve' },
-  { id: 2, title: 'Oppenheimer', duration: 180, director: 'Christopher Nolan' },
-  { id: 3, title: 'Barbie', duration: 114, director: 'Greta Gerwig' },
+  { id: 1, title: 'Dune: Part Two', duration: 100, director: 'Denis Villeneuve' },
+  { id: 2, title: 'Oppenheimer', duration: 111, director: 'Christopher Nolan' },
+  { id: 3, title: 'The Trueman Show', duration: 112, director: 'Peter Weir' },
 ];
 
 const RATINGS_FEED_DATA = [
@@ -40,10 +40,10 @@ const RATINGS_FEED_DATA = [
   {
     id: 103,
     user_id: 52,
-    username: '',
+    username: 'Joe',
     movie_title: 'Dazed and Confused',
     rating: 3,
-    comment: 'Excellement mais si a mal vieilli.',
+    comment: 'Excellement mais a mal vieilli.',
     created_at: '2025-11-20 14:00:00',
     initialLikes: 4,
     initialDislikes: 2,
@@ -101,11 +101,10 @@ function ReviewCard({ item }) {
           <View>
             <Text style={styles.userName}>{item.username}</Text>
             <Text style={styles.timestamp}>
-                {new Date(item.created_at).toLocaleDateString('fr-CA')}
+                {new Date(item.created_at).toLocaleDateString('en-CA')}
             </Text>
           </View>
         </View>
-        <Ionicons name="ellipsis-horizontal" size={20} color={SUBTLE_COLOR} />
       </View>
 
       {/* content */}
@@ -128,10 +127,7 @@ function ReviewCard({ item }) {
             size={20} 
             color={reactionState === 'like' ? PRIMARY_COLOR : SUBTLE_COLOR} 
           />
-          <Text style={[
-            styles.reactionCount, 
-            { color: reactionState === 'like' ? PRIMARY_COLOR : SUBTLE_COLOR }
-          ]}>
+          <Text>
             {likesCount}
           </Text>
         </TouchableOpacity>
@@ -145,10 +141,7 @@ function ReviewCard({ item }) {
             size={20} 
             color={reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR} 
           />
-          <Text style={[
-            styles.reactionCount, 
-            { color: reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR }
-          ]}>
+          <Text>
             {dislikesCount}
           </Text>
         </TouchableOpacity>
@@ -160,13 +153,13 @@ function ReviewCard({ item }) {
 export default function Feed() {
 
   const renderPopularItem = ({ item }) => (
-    <TouchableOpacity style={styles.popularCard}>
+    <View style={styles.popularCard}>
       <View style={styles.posterPlaceholder}>
         <Ionicons name="film-outline" size={32} color="#fff" />
       </View>
-      <Text style={styles.popularTitle} numberOfLines={2}>{item.title}</Text>
+      <Text style={styles.popularTitle} >{item.title}</Text>
       <Text style={styles.popularDirector}>{item.director}</Text>
-    </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -186,7 +179,7 @@ export default function Feed() {
           
           ListHeaderComponent={
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Populaire</Text>
+              <Text style={styles.sectionTitle}>Popular</Text>
               <View style={styles.popularListContainer}>
                 {POPULAR_MOVIES_DATA.map((movie) => (
                   <View key={movie.id} style={styles.popularWrapper}>
@@ -194,7 +187,7 @@ export default function Feed() {
                   </View>
                 ))}
               </View>
-              <Text style={styles.sectionTitle}>Par vos amis</Text>
+              <Text style={styles.sectionTitle}>By your friends</Text>
             </View>
           }
         />
@@ -268,7 +261,7 @@ const styles = StyleSheet.create({
     color: SUBTLE_COLOR,
     textAlign: 'center',
   },
-  // Carte Review
+
   reviewCard: {
     backgroundColor: '#fff',
     marginHorizontal: 20,

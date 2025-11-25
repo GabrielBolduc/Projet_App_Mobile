@@ -14,7 +14,7 @@ const MY_RATINGS_DATA = [
     movie_id: 1,
     movie_title: 'Dune: Part Two',
     rating: 5,
-    comment: 'Visuellement époustouflant. Une expérience cinéma incroyable.',
+    comment: 'Sur la coche',
     created_at: '2025-11-23 09:30:00',
   },
   {
@@ -30,13 +30,13 @@ const MY_RATINGS_DATA = [
     movie_id: 7,
     movie_title: 'Napoleon',
     rating: 3,
-    comment: 'Les scènes de batailles sont top, mais le reste est un peu lent.',
+    comment: 'Trop lent',
     created_at: '2025-11-20 20:00:00',
   },
   {
     id: 204,
     movie_id: 9,
-    movie_title: 'Five Nights at Freddy\'s',
+    movie_title: 'Five Nights at Freddys',
     rating: 1,
     comment: 'Mauvais.',
     created_at: '2025-11-01 18:45:00',
@@ -59,14 +59,14 @@ function StarRating({ rating }) {
   return <View style={{ flexDirection: 'row' }}>{stars}</View>;
 }
 
-export default function MyRatings() {
+export default function MyRatings({ navigation }) {
 
-  const handleEditPress = (item) => {
-    console.log("Naviguer vers 'Noter film' en mode EDIT pour l'ID:", item.id);
+  const handleEditPress = () => {
+    
   };
 
   const handleAddPress = () => {
-    console.log("Naviguer vers 'Noter film' en mode AJOUT");
+    navigation.navigate('RateMovie')
   };
 
   const renderRatingItem = ({ item }) => (
@@ -79,7 +79,7 @@ export default function MyRatings() {
         <View style={styles.cardHeader}>
           <Text style={styles.movieTitle}>{item.movie_title}</Text>
           <Text style={styles.dateText}>
-            {new Date(item.created_at).toLocaleDateString('fr-CA')}
+            {new Date(item.created_at).toLocaleDateString('en-CA')}
           </Text>
         </View>
 
@@ -88,7 +88,7 @@ export default function MyRatings() {
         </View>
 
         {item.comment ? (
-          <Text style={styles.commentText} numberOfLines={3}>
+          <Text style={styles.commentText}>
             {item.comment}
           </Text>
         ) : (
@@ -104,7 +104,7 @@ export default function MyRatings() {
         
         {/* header */}
         <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>Mes ratings</Text>
+           <Text style={styles.screenTitle}>My ratings</Text>
         </View>
 
         {/* rating list */}
@@ -121,7 +121,7 @@ export default function MyRatings() {
           }
         />
 
-        {/* FAB */}
+        {/* btn add */}
         <TouchableOpacity 
           style={styles.fab} 
           onPress={handleAddPress}
