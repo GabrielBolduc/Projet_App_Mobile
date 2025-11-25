@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 const PRIMARY_COLOR = '#4A6572';
 
-export default function SignupScreen({ navigation }) {
+export default function Signup({ navigation }) {
 
   const [hasProfilePic, setHasProfilePic] = useState(false);
 

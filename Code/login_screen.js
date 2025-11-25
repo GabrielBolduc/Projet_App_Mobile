@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PRIMARY_COLOR = '#4A6572';
 
-export default function LoginScreen({ navigation }) {
+export default function Login({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.content}>

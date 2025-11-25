@@ -41,7 +41,7 @@ const Item = ({ user, name, reason, reaction }) => (
     </View>
 );
 
-export default function RecommendationScreen() {
+export default function Recommendation({ navigation }) {
   return (
       <SafeAreaView style={styles.container}>
         
@@ -59,7 +59,7 @@ export default function RecommendationScreen() {
             contentContainerStyle={styles.listContent}
         />
 
-        <TouchableOpacity style={styles.fab}>
+        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddRecommendation')}>
             <Ionicons name="add" size={30} color="#fff" />
         </TouchableOpacity>
 

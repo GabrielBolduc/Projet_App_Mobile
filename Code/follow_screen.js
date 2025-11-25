@@ -32,7 +32,7 @@ const Item = ({ name }) => (
     </View>
 );
 
-export default function FollowScreen() {
+export default function Follow({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
         
@@ -44,7 +44,7 @@ export default function FollowScreen() {
             showsVerticalScrollIndicator={false}
         />
 
-        <TouchableOpacity style={styles.fab}>
+        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddFollower')}>
             <Ionicons name="person-add" size={24} color="#fff" />
         </TouchableOpacity>
 

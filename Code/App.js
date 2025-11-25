@@ -5,10 +5,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import LoginScreen from './login_screen';
-import SignupScreen from './signup_screen';
-import FollowScreen from './follow_screen';
-import RecommendationScreen from './recommendation_screen';
+import Login from './login_screen';
+import Signup from './signup_screen';
+import Follow from './follow_screen';
+import Recommandation from './recommendation_screen';
+
+import AddRecommendation from './addRecommendation_screen';
+import AddFollower from './addFollower_screen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -45,12 +48,12 @@ function MyTabs({ navigation }) {
     >
       <Tab.Screen 
         name="Recommendations" 
-        component={RecommendationScreen} 
+        component={Recommandation} 
         options={{ title: 'Recommandations' }} 
       />
       <Tab.Screen 
         name="Friends" 
-        component={FollowScreen} 
+        component={Follow} 
         options={{ title: 'Amis' }} 
       />
     </Tab.Navigator>
@@ -64,13 +67,13 @@ export default function App() {
         
         <Stack.Screen 
           name="Login" 
-          component={LoginScreen} 
+          component={Login} 
           options={{ headerShown: false }} 
         />
         
         <Stack.Screen 
           name="Signup" 
-          component={SignupScreen} 
+          component={Signup} 
           options={{ 
             title: '', 
             headerTransparent: true, 
@@ -82,6 +85,17 @@ export default function App() {
           name="Home" 
           component={MyTabs} 
           options={{ headerShown: false }} 
+        />
+
+        <Stack.Screen 
+          name="AddRecommendation" 
+          component={AddRecommendation} 
+          options={{ title: 'Nouvelle recommandation', headerTintColor: PRIMARY_COLOR }} 
+        />
+        <Stack.Screen 
+          name="AddFollower" 
+          component={AddFollower} 
+          options={{ title: 'Ajouter un ami', headerTintColor: PRIMARY_COLOR }} 
         />
         
       </Stack.Navigator>
