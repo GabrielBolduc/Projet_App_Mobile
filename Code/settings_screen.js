@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 
-// 1. On récupère la prop 'navigation' ici
 export default function Settings({ navigation }) {
+  const { logout } = useAuth(); 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const toggleSwitch = () => setIsDarkMode(previousState => !previousState);
 
-  // Fonction de déconnexion
   const handleLogout = () => {
-    // On réinitialise la navigation pour que l'utilisateur ne puisse pas revenir en arrière
+    logout();
+
+    // reset la navigation
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],
@@ -55,7 +57,6 @@ export default function Settings({ navigation }) {
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
 
-            {/* 2. Ajout de l'action onPress sur le bouton Logout */}
             <TouchableOpacity 
               style={styles.logoutButton}
               onPress={handleLogout}

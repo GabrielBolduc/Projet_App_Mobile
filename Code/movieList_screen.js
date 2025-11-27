@@ -1,30 +1,39 @@
-import React from 'react'; // Plus besoin de useState pour l'instant
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { executeQuery } from './services/api'; 
 
 const PRIMARY_COLOR = '#4A6572';
 
-const ALL_MOVIES = [
-  { id: 1, title: 'Dune: Part Two', duration: 166, director: 'Denis Villeneuve' },
-  { id: 2, title: 'Oppenheimer', duration: 180, director: 'Christopher Nolan' },
-  { id: 3, title: 'Barbie', duration: 114, director: 'Greta Gerwig' },
-  { id: 4, title: 'The Batman', duration: 176, director: 'Matt Reeves' },
-  { id: 7, title: 'Napoleon', duration: 158, director: 'Ridley Scott' },
-  { id: 8, title: 'Spider-Man: Across the Spider-Verse', duration: 140, director: 'Joaquim Dos Santos' },
-  { id: 9, title: 'Five Nights at Freddy\'s', duration: 109, director: 'Emma Tammi' },
-  { id: 10, title: 'Killers of the Flower Moon', duration: 206, director: 'Martin Scorsese' },
-];
-
 export default function MovieListScreen({ navigation }) {
+  // stocker film de la bd
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Action quand on choisit un film
+  // chargement donne
+  useEffect(() => {
+    const fetchMovies = async () => {
+      const result = await executeQuery('get_all_movies');
+      
+      if (result.success) {
+        setMovies(result.data);
+      }
+      setLoading(false);
+    };
+
+    fetchMovies();
+  }, []);
+
   const handleSelectMovie = (movie) => {
     navigation.navigate('RateMovie', { selection: movie });
   };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.movieItem} onPress={() => handleSelectMovie(item)}>
+      <View style={styles.iconContainer}>
+         <Ionicons name="film-outline" size={24} color={PRIMARY_COLOR} />
+      </View>
       <View style={styles.infoContainer}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.details}>
@@ -45,12 +54,17 @@ export default function MovieListScreen({ navigation }) {
         <View style={{ width: 28 }} />
       </View>
 
-      <FlatList
-        data={ALL_MOVIES}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-      />
+        <FlatList
+            data={movies} 
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+                <View style={styles.loadingContainer}>
+                    <Text style={{color: '#888'}}>Aucun film disponible.</Text>
+                </View>
+            }
+        />
     </SafeAreaView>
   );
 }
@@ -59,6 +73,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
   },
   header: {
     flexDirection: 'row',

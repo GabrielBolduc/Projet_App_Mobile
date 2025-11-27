@@ -1,57 +1,65 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { executeQuery } from './services/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#999';
 
-// Données simulées
-const MOCK_FRIENDS = [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'Alice Johnson' },
-    { id: '4', name: 'Bob Brown' },
-    { id: '5', name: 'Charlie Davis' },
-    { id: '6', name: 'Diana Evans' },
-    { id: '7', name: 'Frank Green' },
-    { id: '8', name: 'Grace Harris' },
-    { id: '9', name: 'Henry Lee' },
-    { id: '10', name: 'Ivy Martinez' },
-];
-
 const EMOJI_OPTIONS = [
-    { value: 'happy', icon: '😁', name: 'Génial' },
-    { value: 'sad', icon: '😔', name: 'Déçu' },
-    { value: 'shock', icon: '🤯', name: 'Surpris' },
-    { value: 'love', icon: '😍', name: 'J’adore' },
+    { value: '😁', icon: '😁', name: 'Génial' },
+    { value: '😔', icon: '😔', name: 'Déçu' },
+    { value: '🤯', icon: '🤯', name: 'Surpris' },
+    { value: '😍', icon: '😍', name: 'J’adore' },
 ];
 
 export default function AddRecommendationScreen({ navigation }) {
+    const { user } = useAuth(); // Moi (expéditeur)
+    
     const [movieName, setMovieName] = useState('');
     const [explanation, setExplanation] = useState('');
     
-    // États pour les sélections
-    const [selectedFriend, setSelectedFriend] = useState(null);
+    // liste amis
+    const [friendsList, setFriendsList] = useState([]);
+    const [loadingFriends, setLoadingFriends] = useState(true);
+
+    const [selectedFriend, setSelectedFriend] = useState(null); // ami qui vas recevoir
     const [selectedEmoji, setSelectedEmoji] = useState(null);
     
-    // État pour ouvrir/fermer le menu déroulant
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSending, setIsSending] = useState(false);
 
-    const handleShare = () => {
+    useEffect(() => {
+        const fetchFriends = async () => {
+            if (!user) return;
+            try {
+                // recupere amis
+                const result = await executeQuery('get_my_friends', { user_id: user.id });
+                if (result.success) {
+                    const formatted = result.data.map(f => ({
+                        id: f.id,
+                        name: f.username
+                    }));
+                    setFriendsList(formatted);
+                }
+            } catch (e) {
+                console.error("Erreur chargement amis:", e);
+            } finally {
+                setLoadingFriends(false);
+            }
+        };
+        fetchFriends();
+    }, [user]);
+
+    // envoie recommendation
+    const handleShare = async () => {
         if (!movieName || !explanation || !selectedFriend || !selectedEmoji) {
-            alert("Veuillez remplir tous les champs !");
+            Alert.alert("Erreur", "Vous devez remplir tout les champs");
             return;
         }
-        console.log({ 
-            movie: movieName, 
-            reason: explanation, 
-            friend_id: selectedFriend.id, 
-            emoji: selectedEmoji 
-        });
-        alert("Recommandation partagée !");
-        navigation.goBack();
     };
 
     const handleSelectFriend = (friend) => {
@@ -93,27 +101,33 @@ export default function AddRecommendationScreen({ navigation }) {
                 {isDropdownOpen && (
                     <View style={styles.dropdownList}>
                         <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 200 }}>
-                            {MOCK_FRIENDS.map((friend) => (
-                                <TouchableOpacity 
-                                    key={friend.id} 
-                                    style={styles.dropdownItem}
-                                    onPress={() => handleSelectFriend(friend)}
-                                >
-                                    <Ionicons name="person-circle" size={30} color={PRIMARY_COLOR} style={{ marginRight: 10 }} />
-                                    <Text style={styles.dropdownItemText}>{friend.name}</Text>
-                                    
-                                    {selectedFriend?.id === friend.id && (
-                                        <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
-                                    )}
-                                </TouchableOpacity>
-                            ))}
+                            {loadingFriends ? (
+                                <ActivityIndicator size="small" color={PRIMARY_COLOR} style={{margin: 20}} />
+                            ) : friendsList.length === 0 ? (
+                                <Text style={{padding:15, color:SUBTLE_COLOR, textAlign:'center'}}>Aucun ami trouvé.</Text>
+                            ) : (
+                                friendsList.map((friend) => (
+                                    <TouchableOpacity 
+                                        key={friend.id} 
+                                        style={styles.dropdownItem}
+                                        onPress={() => handleSelectFriend(friend)}
+                                    >
+                                        <Ionicons name="person-circle" size={30} color={PRIMARY_COLOR} style={{ marginRight: 10 }} />
+                                        <Text style={styles.dropdownItemText}>{friend.name}</Text>
+                                        
+                                        {selectedFriend?.id === friend.id && (
+                                            <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
+                                        )}
+                                    </TouchableOpacity>
+                                ))
+                            )}
                         </ScrollView>
                     </View>
                 )}
 
                 <TextInput
                     style={styles.input}
-                    placeholder="Nom du film"
+                    placeholder="Rechercher un film (ex: Dune)"
                     placeholderTextColor={SUBTLE_COLOR}
                     value={movieName}
                     onChangeText={setMovieName}
@@ -145,8 +159,16 @@ export default function AddRecommendationScreen({ navigation }) {
                     ))}
                 </View>
 
-                <TouchableOpacity style={styles.primaryButton} onPress={handleShare}>
-                    <Text style={styles.primaryButtonText}>Partager</Text>
+                <TouchableOpacity 
+                    style={styles.primaryButton} 
+                    onPress={handleShare}
+                    disabled={isSending}
+                >
+                    {isSending ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={styles.primaryButtonText}>Partager</Text>
+                    )}
                 </TouchableOpacity>
 
             </ScrollView>
@@ -182,7 +204,6 @@ const styles = StyleSheet.create({
         color: TEXT_COLOR,
         justifyContent: 'center', 
     },
-    // Styles spécifiques au Dropdown
     dropdownTrigger: {
         flexDirection: 'row',
         alignItems: 'center',

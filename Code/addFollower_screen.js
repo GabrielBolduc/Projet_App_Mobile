@@ -1,27 +1,15 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { executeQuery } from './services/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#999';
 
-// Mock Data (Liste des utilisateurs potentiels à ajouter)
-const USERS_TO_ADD = [
-    { id: 'u1', name: 'Leo_D', isFollowing: false },
-    { id: 'u2', name: 'Jane_Doe', isFollowing: true },
-    { id: 'u3', name: 'ChrisNolanFan', isFollowing: false },
-    { id: 'u4', name: 'Sophie_L', isFollowing: false },
-    { id: 'u5', name: 'MovieBuff123', isFollowing: true },
-    { id: 'u6', name: 'CinemaLover', isFollowing: false },
-    { id: 'u7', name: 'FilmGeek', isFollowing: false },
-    { id: 'u8', name: 'Anna_K', isFollowing: true },
-    { id: 'u9', name: 'John_Smith', isFollowing: false },
-    { id: 'u10', name: 'PopcornAddict', isFollowing: false },
-];
-
-function UserSearchResultItem({ user, onToggleFollow }) {
+function UserSearchResultItem({ user }) {
     return (
         <View style={styles.card}>
             <View style={styles.userInfo}>
@@ -33,7 +21,6 @@ function UserSearchResultItem({ user, onToggleFollow }) {
             
             <TouchableOpacity 
                 style={styles.actionButton} 
-                onPress={() => onToggleFollow(user.id)}
             >
                 <Ionicons 
                     name={user.isFollowing ? "checkmark-circle" : "person-add"} 
@@ -46,28 +33,53 @@ function UserSearchResultItem({ user, onToggleFollow }) {
 }
 
 export default function AddFollower({ navigation }) {
+    const { user } = useAuth(); 
     const [searchText, setSearchText] = useState('');
-    const [searchResults, setSearchResults] = useState(USERS_TO_ADD);
+    const [searchResults, setSearchResults] = useState([]); 
+    const [loading, setLoading] = useState(true);
 
-    const handleToggleFollow = (userId) => {
-        setSearchResults(prevResults =>
-            prevResults.map(user =>
-                user.id === userId ? { ...user, isFollowing: !user.isFollowing } : user
-            )
-        );
-    };
+    useEffect(() => {
+        const loadData = async () => {
+            if (!user) return;
 
-    const filteredResults = searchResults.filter(user =>
-        user.name.toLowerCase().includes(searchText.toLowerCase())
+            try {
+                const friendsRes = await executeQuery('get_my_friends', { user_id: user.id });
+                const followingIds = friendsRes.success ? friendsRes.data.map(f => f.id) : [];
+
+                const usersRes = await executeQuery('search_users', { query: '' }); 
+
+                if (usersRes.success) {
+                    const formattedUsers = usersRes.data
+                        .filter(u => u.id !== user.id) 
+                        .map(u => ({
+                            id: u.id,
+                            name: u.username, 
+                            isFollowing: followingIds.includes(u.id)
+                        }));
+                    
+                    setSearchResults(formattedUsers);
+                }
+            } catch (e) {
+                console.error("Erreur chargement utilisateurs:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, [user]);
+
+    const filteredResults = searchResults.filter(u =>
+        u.name.toLowerCase().includes(searchText.toLowerCase())
     );
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
                 
-                <Text style={styles.sectionTitle}>Ajouter des Amis</Text>
+                <View style={{flexDirection:'row', alignItems:'center', marginBottom:20, justifyContent:'center'}}>
+                     <Text style={[styles.sectionTitle, {marginBottom:0}]}>Ajouter des Amis</Text>
+                </View>
                 
-                {/* Champ de recherche */}
                 <View style={styles.searchBar}>
                     <Ionicons name="search" size={20} color={SUBTLE_COLOR} style={{ marginRight: 10 }} />
                     <TextInput
@@ -79,21 +91,21 @@ export default function AddFollower({ navigation }) {
                     />
                 </View>
 
-                {/* Liste des résultats */}
-                <FlatList
-                    data={filteredResults}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item }) => (
-                        <UserSearchResultItem 
-                            user={item} 
-                            onToggleFollow={handleToggleFollow} 
-                        />
-                    )}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={
-                        <Text style={styles.emptyText}>Aucun utilisateur trouvé.</Text>
-                    }
-                />
+                {loading ? (
+                    <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+                ) : (
+                    <FlatList
+                        data={filteredResults}
+                        keyExtractor={item => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <UserSearchResultItem user={item} />
+                        )}
+                        contentContainerStyle={styles.listContent}
+                        ListEmptyComponent={
+                            <Text style={styles.emptyText}>Aucun utilisateur trouvé.</Text>
+                        }
+                    />
+                )}
             </View>
         </SafeAreaView>
     );

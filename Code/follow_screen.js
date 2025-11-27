@@ -1,58 +1,92 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native'; 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { executeQuery } from './services/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 
-const FOLLOWERS = [
-    { id: '1', name: 'Utilisateur 1' },
-    { id: '2', name: 'Utilisateur 2' },
-    { id: '3', name: 'Utilisateur 3' },
-    { id: '4', name: 'Utilisateur 4' },
-    { id: '5', name: 'Utilisateur 5' },
-    { id: '6', name: 'Utilisateur 6' },
-    { id: '7', name: 'Utilisateur 7' },
-    { id: '8', name: 'Utilisateur 8' },
-    { id: '9', name: 'Utilisateur 9' },
-    { id: '10', name: 'Utilisateur 10' },
-];
+export default function Follow({ navigation }) {
+  const { user } = useAuth(); 
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const Item = ({ name }) => (
+  const fetchFriends = async () => {
+    if (!user) return;
+
+    try {
+        const result = await executeQuery('get_my_friends', { user_id: user.id });
+        if (result.success) {
+            setFriends(result.data);
+        }
+    } catch (e) {
+        console.error("Erreur chargement amis:", e);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchFriends();
+    }, [user])
+  );
+
+  const renderItem = ({ item }) => (
     <View style={styles.card}>
         <View style={styles.userInfo}>
             <View style={styles.avatarContainer}>
-                <Ionicons name="person" size={24} color="#fff" />
+                <Text style={{color:'#fff', fontWeight:'bold', fontSize:18}}>
+                    {item.username ? item.username.charAt(0).toUpperCase() : '?'}
+                </Text>
             </View>
-            <Text style={styles.title}>{name}</Text>
+            <Text style={styles.title}>{item.username}</Text>
         </View>
-        <TouchableOpacity>
+        
+        <TouchableOpacity 
+            onPress={() => {}} 
+        >
             <Ionicons name="close-circle-outline" size={28} color="#D32F2F" />
         </TouchableOpacity>
     </View>
-);
+  );
 
-export default function Follow({ navigation }) {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
 
         <View style={styles.headerContainer}>
-                   <Text style={styles.screenTitle}>Follow</Text>
+           <Text style={styles.screenTitle}>My follow</Text>
         </View>
         
-        <FlatList
-            data={FOLLOWERS}
-            renderItem={({ item }) => <Item name={item.name} />}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-        />
+        {loading ? (
+            <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+        ) : (
+            <FlatList
+                data={friends}
+                renderItem={renderItem}
+                keyExtractor={item => item.id.toString()}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                    <View style={{alignItems:'center', marginTop: 50}}>
+                        <Text style={{color:'#888'}}>Vous ne suivez personne pour l'instant.</Text>
+                    </View>
+                }
+            />
+        )}
 
-        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddFollower')}>
+        <TouchableOpacity 
+            style={styles.fab} 
+            onPress={() => navigation.navigate('AddFollower')}
+        >
             <Ionicons name="person-add" size={24} color="#fff" />
         </TouchableOpacity>
 
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -85,7 +119,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        // Ombres
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -112,8 +145,8 @@ const styles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        bottom: 20,
-        right: 20,
+        bottom: 30,
+        right: 30,
         backgroundColor: PRIMARY_COLOR,
         width: 56,
         height: 56,

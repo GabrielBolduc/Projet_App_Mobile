@@ -7,6 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
+import { AuthProvider } from './context/AuthContext';
+
+
 import Feed from './feed_screen';
 import MyRatings from './myRatings_screen';
 import Settings from './settings_screen';
@@ -16,17 +19,13 @@ import FollowScreen from './follow_screen'
 import Recommendation from './recommendation_screen';
 import AddFollower from './addFollower_screen';
 import AddRecommendation from './addRecommendation_screen';
-
 import Login from './login_screen'
 import Signup from './signup_screen';
-
-
 
 const PRIMARY_COLOR = '#4A6572';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator(); 
-
 
 function MyTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
@@ -85,30 +84,33 @@ function HomeTabs() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator 
-          screenOptions={{ headerShown: false }}
-          initialRouteName='Login'
-        >
-
-          <Stack.Screen name="Login" component={Login} />
-
-          <Stack.Screen name="Signup" component={Signup} />
-          
-          <Stack.Screen name="Home" component={HomeTabs} />
-          
-          <Stack.Screen name="RateMovie"component={RateMovieScreen} />
-
-          <Stack.Screen name="MovieList" component={MovieList} />
-
-          <Stack.Screen name="AddFollower" component={AddFollower} />
-
-          <Stack.Screen name="AddRecommendation" component={AddRecommendation} />
-          
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    // ON ENVELOPPE TOUTE L'APP AVEC LE PROVIDER
+    <AuthProvider>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator 
+            screenOptions={{ headerShown: false }}
+            initialRouteName='Login'
+          >
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Signup" component={Signup} />
+            
+            <Stack.Screen name="Home" component={HomeTabs} />
+            
+            {/* Modal et autres écrans */}
+            <Stack.Screen 
+                name="RateMovie" 
+                component={RateMovieScreen} 
+                options={{ presentation: 'modal' }}
+            />
+            <Stack.Screen name="MovieList" component={MovieList} />
+            <Stack.Screen name="AddFollower" component={AddFollower} />
+            <Stack.Screen name="AddRecommendation" component={AddRecommendation} />
+            
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
 

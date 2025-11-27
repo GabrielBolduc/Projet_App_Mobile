@@ -1,56 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native'; 
+import { executeQuery } from './services/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#888';
-
-
-const POPULAR_MOVIES_DATA = [
-  { id: 1, title: 'Dune: Part Two', duration: 100, director: 'Denis Villeneuve' },
-  { id: 2, title: 'Oppenheimer', duration: 111, director: 'Christopher Nolan' },
-  { id: 3, title: 'The Trueman Show', duration: 112, director: 'Peter Weir' },
-];
-
-const RATINGS_FEED_DATA = [
-  {
-    id: 101, 
-    user_id: 50,
-    username: 'Sophie', 
-    movie_title: 'Dune: Part Two',
-    rating: 5, 
-    comment: 'Tres bon film, mauvaise fin', 
-    created_at: '2025-11-23 09:30:00',
-    initialLikes: 12,
-    initialDislikes: 0,
-  },
-  {
-    id: 102,
-    user_id: 51,
-    username: 'Marc',
-    movie_title: 'The Batman',
-    rating: 4,
-    comment: 'Tres sombre, un peu long mais bien filmer.',
-    created_at: '2025-11-22 18:45:00',
-    initialLikes: 8,
-    initialDislikes: 1
-  },
-  {
-    id: 103,
-    user_id: 52,
-    username: 'Joe',
-    movie_title: 'Dazed and Confused',
-    rating: 3,
-    comment: 'Excellement mais a mal vieilli.',
-    created_at: '2025-11-20 14:00:00',
-    initialLikes: 4,
-    initialDislikes: 2,
-    currentUserReaction: 'like', 
-  },
-];
-
 
 function StarRating({ rating }) {
   const stars = [];
@@ -68,28 +26,58 @@ function StarRating({ rating }) {
   return <View style={{ flexDirection: 'row' }}>{stars}</View>;
 }
 
-// Review follower
-function ReviewCard({ item }) {
-  const [reactionState, setReactionState] = useState(item.currentUserReaction); 
-  const [likesCount, setLikesCount] = useState(item.initialLikes);
-  const [dislikesCount, setDislikesCount] = useState(item.initialDislikes);
+// review card
+function ReviewCard({ item, currentUserId }) {
+  const [reactionState, setReactionState] = useState(item.current_user_reaction || null); 
+  const [likesCount, setLikesCount] = useState(item.likes_count || 0);
+  const [dislikesCount, setDislikesCount] = useState(item.dislikes_count || 0);
 
-  const handleReaction = (type) => {
-    if (reactionState === type) {
-      setReactionState(null);
-      if (type === 'like') setLikesCount(prev => prev - 1);
-      else setDislikesCount(prev => prev - 1);
-    } else {
-        
-      if (reactionState === 'like' && type === 'dislike') {
-        setLikesCount(prev => prev - 1);
-      } else if (reactionState === 'dislike' && type === 'like') {
-        setDislikesCount(prev => prev - 1);
+  const handleReaction = async (newType) => {
+    // Calcul des nouvelles valeurs AVANT de changer l'état
+    let nextState = null;
+    let nextLikes = likesCount;
+    let nextDislikes = dislikesCount;
+
+    // : retire reaction
+    if (reactionState === newType) {
+      nextState = null; 
+      if (newType === 'like')
+      {
+        nextLikes = Math.max(0, likesCount - 1);
       }
+      else
+      {
+        nextDislikes = Math.max(0, dislikesCount - 1);
+      } 
+    } 
+    // nouvelle reaction
+    else {
+      nextState = newType;
+      // Retirer l'ancienne réaction si elle existait
+      if (reactionState === 'like') nextLikes = Math.max(0, likesCount - 1);
+      if (reactionState === 'dislike') nextDislikes = Math.max(0, dislikesCount - 1);
+      // Ajouter la nouvelle
+      if (newType === 'like') nextLikes++;
+      else nextDislikes++;
+    }
 
-      setReactionState(type);
-      if (type === 'like') setLikesCount(prev => prev + 1);
-      else setDislikesCount(prev => prev + 1);
+    // maj visuel
+    setReactionState(nextState);
+    setLikesCount(nextLikes);
+    setDislikesCount(nextDislikes);
+
+    // appel api
+    if (nextState === null) {
+        await executeQuery('remove_reaction', {
+            user_id: currentUserId,
+            rating_id: item.id
+        });
+    } else {
+        await executeQuery('add_reaction', {
+            user_id: currentUserId,
+            rating_id: item.id,
+            type: nextState
+        });
     }
   };
 
@@ -98,10 +86,15 @@ function ReviewCard({ item }) {
       {/* header */}
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
+          <View style={styles.avatar}>
+             <Text style={{color:'#fff', fontWeight:'bold'}}>
+                {item.username ? item.username.charAt(0).toUpperCase() : '?'}
+             </Text>
+          </View>
           <View>
             <Text style={styles.userName}>{item.username}</Text>
             <Text style={styles.timestamp}>
-                {new Date(item.created_at).toLocaleDateString('en-CA')}
+                {item.created_at ? new Date(item.created_at).toLocaleDateString('fr-CA') : ''}
             </Text>
           </View>
         </View>
@@ -121,13 +114,14 @@ function ReviewCard({ item }) {
         <TouchableOpacity 
           style={styles.reactionButton} 
           onPress={() => handleReaction('like')}
+          activeOpacity={0.7}
         >
           <Ionicons 
             name={reactionState === 'like' ? "thumbs-up" : "thumbs-up-outline"} 
             size={20} 
             color={reactionState === 'like' ? PRIMARY_COLOR : SUBTLE_COLOR} 
           />
-          <Text>
+          <Text style={[styles.reactionCount, {color: reactionState === 'like' ? PRIMARY_COLOR : SUBTLE_COLOR}]}>
             {likesCount}
           </Text>
         </TouchableOpacity>
@@ -135,13 +129,14 @@ function ReviewCard({ item }) {
         <TouchableOpacity 
           style={styles.reactionButton} 
           onPress={() => handleReaction('dislike')}
+          activeOpacity={0.7}
         >
           <Ionicons 
             name={reactionState === 'dislike' ? "thumbs-down" : "thumbs-down-outline"} 
             size={20} 
             color={reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR} 
           />
-          <Text>
+          <Text style={[styles.reactionCount, {color: reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR}]}>
             {dislikesCount}
           </Text>
         </TouchableOpacity>
@@ -151,47 +146,98 @@ function ReviewCard({ item }) {
 }
 
 export default function Feed() {
+  const { user } = useAuth();
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [feedData, setFeedData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAllData = async () => {
+    if (!user) return;
+
+    try {
+        const popRes = await executeQuery('get_popular_movies');
+        if (popRes.success) setPopularMovies(popRes.data);
+
+        const feedRes = await executeQuery('get_feed', { user_id: user.id });
+        if (feedRes.success) setFeedData(feedRes.data);
+    } catch (e) {
+        console.error("Erreur chargement feed:", e);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAllData();
+    setRefreshing(false);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllData();
+    }, [user])
+  );
 
   const renderPopularItem = ({ item }) => (
     <View style={styles.popularCard}>
       <View style={styles.posterPlaceholder}>
         <Ionicons name="film-outline" size={32} color="#fff" />
       </View>
-      <Text style={styles.popularTitle} >{item.title}</Text>
-      <Text style={styles.popularDirector}>{item.director}</Text>
+      <Text style={styles.popularTitle} numberOfLines={2}>{item.title}</Text>
+      <Text style={styles.popularDirector} numberOfLines={1}>{item.director}</Text>
     </View>
   );
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        
         <View style={styles.headerContainer}>
            <Text style={styles.screenTitle}>Feed</Text>
         </View>
 
-        <FlatList
-          data={RATINGS_FEED_DATA}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <ReviewCard item={item} />}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          
-          ListHeaderComponent={
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Popular</Text>
-              <View style={styles.popularListContainer}>
-                {POPULAR_MOVIES_DATA.map((movie) => (
-                  <View key={movie.id} style={styles.popularWrapper}>
-                     {renderPopularItem({ item: movie })}
-                  </View>
-                ))}
-              </View>
-              <Text style={styles.sectionTitle}>By your friends</Text>
-            </View>
-          }
-        />
-
+        {loading && !refreshing ? (
+            <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+        ) : (
+            <FlatList
+            data={feedData}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+                <ReviewCard 
+                    item={item} 
+                    currentUserId={user ? user.id : 0} 
+                />
+            )}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+            }
+            ListHeaderComponent={
+                <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Popular</Text>
+                <View style={styles.popularListContainer}>
+                    {popularMovies.length > 0 ? (
+                        popularMovies.map((movie) => (
+                        <View key={movie.id} style={styles.popularWrapper}>
+                            {renderPopularItem({ item: movie })}
+                        </View>
+                        ))
+                    ) : (
+                        <Text style={{color:'#888', fontStyle:'italic'}}>Loading movies...</Text>
+                    )}
+                </View>
+                <Text style={styles.sectionTitle}>By your friends</Text>
+                </View>
+            }
+            ListEmptyComponent={
+                <View style={{alignItems:'center', marginTop: 20}}>
+                    <Text style={{color:'#888'}}>Aucune activité récente.</Text>
+                </View>
+            }
+            />
+        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -228,7 +274,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     marginTop: 5,
   },
-  // Populaire
   popularListContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -261,7 +306,6 @@ const styles = StyleSheet.create({
     color: SUBTLE_COLOR,
     textAlign: 'center',
   },
-
   reviewCard: {
     backgroundColor: '#fff',
     marginHorizontal: 20,

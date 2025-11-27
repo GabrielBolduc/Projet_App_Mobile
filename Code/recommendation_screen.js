@@ -1,74 +1,119 @@
-import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useCallback } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native'; 
+import { executeQuery } from './services/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 
-const RECOMMENDATIONS = [
-    { id: '1', user: 'Thomas', name: 'Inglorious Basterds', reason: 'Car tu as aimé Django Unchained', reaction: '😎' },
-    { id: '2', user: 'Sarah', name: 'Pulp Fiction', reason: 'Un classique absolu à voir', reaction: '🔥' },
-    { id: '3', user: 'Mike', name: 'The Dark Knight', reason: 'Puisque tu es fan de Nolan', reaction: '🦇' },
-];
-
-const Item = ({ user, name, reason, reaction }) => (
+// Composant pour un item de recommandation
+const RecommendationItem = ({ item }) => (
     <View style={styles.card}>
-        {/* L'utilisateur qui recommande */}
+        {/* Header: Qui recommande */}
         <View style={styles.cardHeader}>
             <Ionicons name="person-circle" size={34} color={PRIMARY_COLOR} style={{ marginRight: 8 }} />
             <Text style={styles.headerText}>
-                <Text style={styles.username}>{user}</Text> vous recommande :
+                <Text style={styles.username}>{item.sender_name}</Text> vous recommande :
             </Text>
         </View>
 
-        {/* Nom du film */}
+        {/* Film */}
         <View style={styles.movieContainer}>
             <Ionicons name="film-outline" size={20} color="#666" style={{ marginRight: 8 }} />
-            <Text style={styles.movieTitle}>{name}</Text>
+            <Text style={styles.movieTitle}>{item.movie_title}</Text>
         </View>
 
         <View style={styles.divider} />
 
         {/* Raison */}
         <Text style={styles.labelText}>Raison :</Text>
-        <Text style={styles.reasonText}>{reason}</Text>
+        <Text style={styles.reasonText}>{item.message}</Text>
 
-        {/* Réaction */}
+        {/* Réaction (Emoji) */}
         <View style={styles.reactionContainer}>
             <Text style={styles.labelText}>Réaction :</Text>
-            <Text style={styles.reactionEmoji}>{reaction}</Text>
+            <Text style={styles.reactionEmoji}>{item.emoji}</Text>
         </View>
     </View>
 );
 
 export default function Recommendation({ navigation }) {
-  return (
-      <SafeAreaView style={styles.container}>
+    const { user } = useAuth(); 
+    const [recommendations, setRecommendations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
-        <View style={styles.headerContainer}>
-            <Text style={styles.screenTitle}>Recommendation</Text>
-        </View>
-        
-        <FlatList
-            data={RECOMMENDATIONS}
-            renderItem={({ item }) => (
-                <Item 
-                    user={item.user} 
-                    name={item.name} 
-                    reason={item.reason} 
-                    reaction={item.reaction} 
-                />
-            )}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-        />
+    const fetchRecommendations = async () => {
+        if (!user) return;
 
-        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddRecommendation')}>
-            <Ionicons name="add" size={30} color="#fff" />
-        </TouchableOpacity>
+        try {
+            // Appel API avec l'ID de l'utilisateur connecté (receiver_id)
+            const result = await executeQuery('get_my_recommendations', { user_id: user.id });
+            
+            if (result.success) {
+                setRecommendations(result.data);
+            }
+        } catch (e) {
+            console.error("Erreur chargement recommandations:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      </SafeAreaView>
-  );
+    // Recharger quand on arrive sur l'écran
+    useFocusEffect(
+        useCallback(() => {
+            fetchRecommendations();
+        }, [user])
+    );
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchRecommendations();
+        setRefreshing(false);
+    };
+
+    return (
+        <SafeAreaProvider>
+            <SafeAreaView style={styles.container}>
+
+                <View style={styles.headerContainer}>
+                    <Text style={styles.screenTitle}>Recommandation</Text>
+                </View>
+                
+                {loading && !refreshing ? (
+                    <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+                ) : (
+                    <FlatList
+                        data={recommendations}
+                        renderItem={({ item }) => <RecommendationItem item={item} />}
+                        keyExtractor={item => item.id.toString()}
+                        contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+                        }
+                        ListEmptyComponent={
+                            <View style={{alignItems:'center', marginTop: 50}}>
+                                <Text style={{color:'#888'}}>Aucune recommandation reçue pour le moment.</Text>
+                            </View>
+                        }
+                    />
+                )}
+
+                {/* Bouton pour Envoyer une nouvelle recommandation */}
+                <TouchableOpacity 
+                    style={styles.fab} 
+                    onPress={() => navigation.navigate('AddRecommendation')}
+                >
+                    <Ionicons name="add" size={30} color="#fff" />
+                </TouchableOpacity>
+
+            </SafeAreaView>
+        </SafeAreaProvider>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -157,8 +202,8 @@ const styles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        bottom: 20,
-        right: 20,
+        bottom: 30,
+        right: 30,
         backgroundColor: PRIMARY_COLOR,
         width: 56,
         height: 56,
@@ -166,6 +211,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 5,
-        shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3,
+        shadowColor: "#000", 
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.3, 
+        shadowRadius: 3,
     },
 });

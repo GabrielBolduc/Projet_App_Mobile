@@ -9,6 +9,7 @@ export const executeQuery = async (queryName, params = {}) => {
     try {
         const url = `${BASE_URL}/${queryName}/execute`;
         
+        // debug
         console.log(`[API Request] ${queryName}`, params);
 
         const response = await fetch(url, {
@@ -22,7 +23,7 @@ export const executeQuery = async (queryName, params = {}) => {
 
         const json = await response.json();
         
-        // Log pour le débogage
+        // Log pour debug
         if(!json.success) console.error(`[API Error]`, json.error);
         
         return json;

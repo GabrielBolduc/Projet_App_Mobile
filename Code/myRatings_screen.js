@@ -1,47 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native'; 
+import { executeQuery } from './services/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#888';
-
-// SELECT * FROM Ratings JOIN Movie WHERE user_id = MOI
-const MY_RATINGS_DATA = [
-  {
-    id: 201,
-    movie_id: 1,
-    movie_title: 'Dune: Part Two',
-    rating: 5,
-    comment: 'Sur la coche',
-    created_at: '2025-11-23 09:30:00',
-  },
-  {
-    id: 202,
-    movie_id: 12,
-    movie_title: 'Spider-Man: Across the Spider-Verse',
-    rating: 5,
-    comment: 'Bonne histoire',
-    created_at: '2025-10-15 14:20:00',
-  },
-  {
-    id: 203,
-    movie_id: 7,
-    movie_title: 'Napoleon',
-    rating: 3,
-    comment: 'Trop lent',
-    created_at: '2025-11-20 20:00:00',
-  },
-  {
-    id: 204,
-    movie_id: 9,
-    movie_title: 'Five Nights at Freddys',
-    rating: 1,
-    comment: 'Mauvais.',
-    created_at: '2025-11-01 18:45:00',
-  },
-];
 
 function StarRating({ rating }) {
   const stars = [];
@@ -60,13 +27,53 @@ function StarRating({ rating }) {
 }
 
 export default function MyRatings({ navigation }) {
+  const { user } = useAuth(); // user connecter
+  const [ratings, setRatings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleEditPress = () => {
+  // charcher donne depuis martha
+  const fetchRatings = async () => {
     
+    try {
+        // appel api
+        const result = await executeQuery('get_my_ratings', { user_id: user.id });
+        
+        if (result.success) {
+            setRatings(result.data);
+        } else {
+            console.log("Erreur récupération ratings:", result.error);
+        }
+    } catch (e) {
+        console.error("Erreur réseau:", e);
+    } finally {
+        setLoading(false);
+    }
   };
 
+  // reload ecran (pour voir les nouveaux rating)
+  useFocusEffect(
+    useCallback(() => {
+      fetchRatings();
+    }, [user])
+  );
+
+  // !!!
+  // Pull to refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchRatings();
+    setRefreshing(false);
+  };
+
+  // navig vers mode edit
+  const handleEditPress = (item) => {
+    navigation.navigate('RateMovie', { item: item });
+  };
+
+  // navig vers mode add
   const handleAddPress = () => {
-    navigation.navigate('RateMovie')
+    navigation.navigate('RateMovie');
   };
 
   const renderRatingItem = ({ item }) => (
@@ -76,25 +83,29 @@ export default function MyRatings({ navigation }) {
       activeOpacity={0.7}
     >
       <View style={styles.cardContent}>
+        {/* header */}
         <View style={styles.cardHeader}>
           <Text style={styles.movieTitle}>{item.movie_title}</Text>
           <Text style={styles.dateText}>
-            {new Date(item.created_at).toLocaleDateString('en-CA')}
+            {item.created_at ? new Date(item.created_at).toLocaleDateString('fr-CA') : ''}
           </Text>
         </View>
 
+        {/* etoiles */}
         <View style={styles.ratingContainer}>
           <StarRating rating={item.rating} />
         </View>
 
+        {/* commentaire */}
         {item.comment ? (
-          <Text style={styles.commentText}>
+          <Text style={styles.commentText} numberOfLines={3}>
             {item.comment}
           </Text>
         ) : (
           <Text style={styles.noCommentText}>Aucun commentaire</Text>
         )}
       </View>
+      
     </TouchableOpacity>
   );
 
@@ -107,21 +118,30 @@ export default function MyRatings({ navigation }) {
            <Text style={styles.screenTitle}>My ratings</Text>
         </View>
 
-        {/* rating list */}
-        <FlatList
-          data={MY_RATINGS_DATA}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderRatingItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Vous n'avez pas encore noté de films.</Text>
-            </View>
-          }
-        />
+        {/* list */}
+        {loading && !refreshing ? (
+             <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+        ) : (
+            <FlatList
+            data={ratings}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderRatingItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+            }
+            
+            ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>Vous n'avez pas encore noté de films.</Text>
+                </View>
+            }
+            />
+        )}
 
-        {/* btn add */}
+        {/* btn */}
         <TouchableOpacity 
           style={styles.fab} 
           onPress={handleAddPress}
@@ -153,16 +173,16 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 20,
-    paddingBottom: 80, //bouton FAB
+    paddingBottom: 80, 
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 15,
     marginBottom: 15,
-    flexDirection: 'row', // Pour aligner contenu et icone edit
+    flexDirection: 'row', 
     justifyContent: 'space-between',
-    alignItems: 'center',
+    // Ombre
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -171,7 +191,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1, 
-    marginRight: 10,
+    marginRight: 5,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -203,9 +223,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontStyle: 'italic',
   },
-  editIconContainer: {
-    padding: 5,
-  },
   emptyContainer: {
     alignItems: 'center',
     marginTop: 50,
@@ -214,7 +231,6 @@ const styles = StyleSheet.create({
     color: SUBTLE_COLOR,
     fontSize: 16,
   },
-  // Floating Action Button (FAB)
   fab: {
     position: 'absolute',
     bottom: 30,
@@ -225,5 +241,10 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY_COLOR,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });

@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  Alert 
-} from 'react-native';
+import { View, Text, StyleSheet,  TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,13 +7,13 @@ const PRIMARY_COLOR = '#4A6572';
 const DANGER_COLOR = '#D32F2F';
 
 export default function RateMovieScreen({ navigation, route }) {
-  // 1. Récupération des paramètres (si on vient du mode Edit)
+  // recuperer route (add ou edit )
   const existingItem = route.params?.item;
   const isEditMode = !!existingItem;
 
   useEffect(() => {
     if (route.params?.selection) {
-      // Si on revient de la liste avec une "selection"
+      // data pour en mode edit
       setSelectedMovie({
         id: route.params.selection.id,
         title: route.params.selection.title
@@ -29,30 +21,28 @@ export default function RateMovieScreen({ navigation, route }) {
     }
   }, [route.params?.selection]);
 
-  // 2. États locaux (State)
-  // Si mode edit, on pré-remplit, sinon vide
+  // afficher les data en mode edit
   const [selectedMovie, setSelectedMovie] = useState(
     existingItem ? { id: existingItem.movie_id, title: existingItem.movie_title } : null
   );
   const [rating, setRating] = useState(existingItem ? existingItem.rating : 0);
   const [comment, setComment] = useState(existingItem ? existingItem.comment : '');
 
-  // Fonction pour gérer le clic sur une étoile
+  // etoile
   const handleStarPress = (starValue) => {
     setRating(starValue);
   };
 
-  // Fonction simulant la navigation vers l'écran "Liste Film"
   const handleSelectMoviePress = () => {
     navigation.navigate('MovieList')
   };
 
   const handleSave = () => {
     if (!selectedMovie || rating === 0) {
-      Alert.alert("Erreur", "Veuillez sélectionner un film et donner une note.");
+      Alert.alert("Erreur", "Vous devez remplir tout les champs");
       return;
     }
-    // Ici : Appel API SQL (INSERT ou UPDATE dans la table Ratings)
+    // appel sql
     console.log("Sauvegarde :", {
       mode: isEditMode ? 'UPDATE' : 'INSERT',
       movie_id: selectedMovie.id,
@@ -67,35 +57,32 @@ export default function RateMovieScreen({ navigation, route }) {
     <SafeAreaView style={styles.container}>
       
       <View style={styles.header}>
-        {/* Bouton Retour */}
+        {/* btn retour */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
         </TouchableOpacity>
 
-        {/* Titre */}
+        {/* title */}
         <Text style={styles.headerTitle}>
           {isEditMode ? "Modifier l'avis" : "Ajouter rating"}
         </Text>
-
-        {/* Vue vide invisible pour centrer le titre */}
         <View style={{ width: 24 }} /> 
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
 
-        {/* SECTION 1 : SÉLECTION DU FILM */}
+        {/* selection du film */}
         <View style={styles.section}>
           {selectedMovie ? (
-            // Si un film est choisi
+            // si un film est choisi
             <TouchableOpacity style={styles.selectedMovieCard} onPress={handleSelectMoviePress}>
               <View style={styles.movieIconPlaceholder}>
                  <Ionicons name="film" size={24} color="#fff" />
               </View>
               <Text style={styles.selectedMovieTitle}>{selectedMovie.title}</Text>
-              <Ionicons name="swap-horizontal" size={20} color={PRIMARY_COLOR} />
             </TouchableOpacity>
           ) : (
-            // Si aucun film n'est choisi (Bouton de la maquette)
+           
             <TouchableOpacity style={styles.selectButton} onPress={handleSelectMoviePress}>
               <Text style={styles.selectButtonText}>Sélectionner un film</Text>
               <Ionicons name="chevron-forward" size={20} color="#fff" />
@@ -103,7 +90,7 @@ export default function RateMovieScreen({ navigation, route }) {
           )}
         </View>
 
-        {/* SECTION 2 : NOTE (ÉTOILES) */}
+        {/* etoiles */}
         <View style={styles.section}>
           <Text style={styles.label}>Note finale</Text>
           <View style={styles.starsContainer}>
@@ -120,29 +107,24 @@ export default function RateMovieScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* SECTION 3 : AVIS (TEXTE) */}
+        {/* AVIS */}
         <View style={styles.section}>
           <Text style={styles.label}>Donne ton avis</Text>
           <TextInput
             style={styles.textArea}
-            placeholder="Qu'avez-vous pensé de ce film ?"
-            placeholderTextColor="#aaa"
             multiline={true}
             numberOfLines={5}
             value={comment}
             onChangeText={setComment}
-            textAlignVertical="top" // Important pour Android
           />
         </View>
 
-        {/* BOUTONS D'ACTION */}
+        {/* btn */}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Sauvegarder</Text>
-          </TouchableOpacity>
-          
+          </TouchableOpacity>  
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
