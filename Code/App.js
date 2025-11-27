@@ -17,6 +17,9 @@ import Recommendation from './recommendation_screen';
 import AddFollower from './addFollower_screen';
 import AddRecommendation from './addRecommendation_screen';
 
+import Login from './login_screen'
+import Signup from './signup_screen';
+
 
 
 const PRIMARY_COLOR = '#4A6572';
@@ -84,7 +87,14 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator 
+          screenOptions={{ headerShown: false }}
+          initialRouteName='Login'
+        >
+
+          <Stack.Screen name="Login" component={Login} />
+
+          <Stack.Screen name="Signup" component={Signup} />
           
           <Stack.Screen name="Home" component={HomeTabs} />
           

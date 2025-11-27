@@ -5,9 +5,19 @@ import { Ionicons } from '@expo/vector-icons';
 
 const PRIMARY_COLOR = '#4A6572';
 
-export default function Settings() {
+// 1. On récupère la prop 'navigation' ici
+export default function Settings({ navigation }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const toggleSwitch = () => setIsDarkMode(previousState => !previousState);
+
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    // On réinitialise la navigation pour que l'utilisateur ne puisse pas revenir en arrière
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
 
   return (
     <SafeAreaProvider>
@@ -45,7 +55,11 @@ export default function Settings() {
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.logoutButton}>
+            {/* 2. Ajout de l'action onPress sur le bouton Logout */}
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
           </View>
