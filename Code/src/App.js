@@ -10,17 +10,17 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { AuthProvider } from './context/AuthContext';
 
 
-import Feed from './feed_screen';
-import MyRatings from './myRatings_screen';
-import Settings from './settings_screen';
-import RateMovieScreen from './rateMovie_screen'; 
-import MovieList from './movieList_screen'
-import FollowScreen from './follow_screen'
-import Recommendation from './recommendation_screen';
-import AddFollower from './addFollower_screen';
-import AddRecommendation from './addRecommendation_screen';
-import Login from './login_screen'
-import Signup from './signup_screen';
+import Feed from './feed/feed_screen';
+import MyRatings from './ratings/myRatings_screen';
+import Settings from './settings/settings_screen';
+import RateMovieScreen from './ratings/rateMovie_screen'; 
+import MovieList from './movie/movieList_screen'
+import FollowScreen from './follows/follow_screen'
+import Recommendation from './recommendations/recommendation_screen';
+import AddFollower from './follows/addFollower_screen';
+import AddRecommendation from './recommendations/addRecommendation_screen';
+import Login from './auth/login_screen'
+import Signup from './auth/signup_screen';
 
 const PRIMARY_COLOR = '#4A6572';
 

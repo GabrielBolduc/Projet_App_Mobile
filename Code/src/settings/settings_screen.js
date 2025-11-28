@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons'; 
-import { useAuth } from './context/AuthContext'; 
+import { useAuth } from '../context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 

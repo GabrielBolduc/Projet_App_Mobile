@@ -3,8 +3,8 @@ import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, 
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native'; 
-import { executeQuery } from './services/api'; 
-import { useAuth } from './context/AuthContext'; 
+import { executeQuery } from '../services/api'; 
+import { useAuth } from '../context/AuthContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 
