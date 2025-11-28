@@ -24,9 +24,10 @@ const EMOJI_OPTIONS = [
     { value: '🤮', icon: '🤮', name: "Mauvais" },
 ];
 
-export default function AddRecommendation({ navigation }) {
-    const { user } = useAuth(); // user 
+export default function AddRecommendationScreen({ navigation }) {
+    const { user } = useAuth(); // user connecter
     
+    const [movieName, setMovieName] = useState('');
     const [explanation, setExplanation] = useState('');
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [selectedEmoji, setSelectedEmoji] = useState(null);
