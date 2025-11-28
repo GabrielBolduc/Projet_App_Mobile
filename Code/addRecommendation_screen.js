@@ -17,7 +17,7 @@ const EMOJI_OPTIONS = [
 ];
 
 export default function AddRecommendationScreen({ navigation }) {
-    const { user } = useAuth(); // Moi (expéditeur)
+    const { user } = useAuth(); // user connecter
     
     const [movieName, setMovieName] = useState('');
     const [explanation, setExplanation] = useState('');

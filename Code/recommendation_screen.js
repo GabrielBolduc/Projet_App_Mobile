@@ -8,10 +8,8 @@ import { useAuth } from './context/AuthContext';
 
 const PRIMARY_COLOR = '#4A6572';
 
-// Composant pour un item de recommandation
 const RecommendationItem = ({ item }) => (
     <View style={styles.card}>
-        {/* Header: Qui recommande */}
         <View style={styles.cardHeader}>
             <Ionicons name="person-circle" size={34} color={PRIMARY_COLOR} style={{ marginRight: 8 }} />
             <Text style={styles.headerText}>
@@ -19,7 +17,6 @@ const RecommendationItem = ({ item }) => (
             </Text>
         </View>
 
-        {/* Film */}
         <View style={styles.movieContainer}>
             <Ionicons name="film-outline" size={20} color="#666" style={{ marginRight: 8 }} />
             <Text style={styles.movieTitle}>{item.movie_title}</Text>
@@ -27,11 +24,9 @@ const RecommendationItem = ({ item }) => (
 
         <View style={styles.divider} />
 
-        {/* Raison */}
         <Text style={styles.labelText}>Raison :</Text>
         <Text style={styles.reasonText}>{item.message}</Text>
 
-        {/* Réaction (Emoji) */}
         <View style={styles.reactionContainer}>
             <Text style={styles.labelText}>Réaction :</Text>
             <Text style={styles.reactionEmoji}>{item.emoji}</Text>
@@ -49,7 +44,7 @@ export default function Recommendation({ navigation }) {
         if (!user) return;
 
         try {
-            // Appel API avec l'ID de l'utilisateur connecté (receiver_id)
+            // appel api
             const result = await executeQuery('get_my_recommendations', { user_id: user.id });
             
             if (result.success) {
@@ -62,7 +57,7 @@ export default function Recommendation({ navigation }) {
         }
     };
 
-    // Recharger quand on arrive sur l'écran
+    // reload pour voir nouvelle
     useFocusEffect(
         useCallback(() => {
             fetchRecommendations();
@@ -103,7 +98,6 @@ export default function Recommendation({ navigation }) {
                     />
                 )}
 
-                {/* Bouton pour Envoyer une nouvelle recommandation */}
                 <TouchableOpacity 
                     style={styles.fab} 
                     onPress={() => navigation.navigate('AddRecommendation')}
