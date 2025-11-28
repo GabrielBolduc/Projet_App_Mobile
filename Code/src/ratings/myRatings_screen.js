@@ -115,7 +115,7 @@ export default function MyRatings({ navigation }) {
         
         {/* header */}
         <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>My ratings</Text>
+           <Text style={styles.screenTitle}>Mes Ratings</Text>
         </View>
 
         {/* list */}

@@ -26,7 +26,7 @@ export default function Settings({ navigation }) {
       <SafeAreaView style={styles.container}>
         
         <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>Settings</Text>
+           <Text style={styles.screenTitle}>Paramètres</Text>
         </View>
         
         <View style={styles.contentContainer}>
@@ -36,13 +36,13 @@ export default function Settings({ navigation }) {
               <Ionicons name="person-outline" size={60} color={PRIMARY_COLOR} />
             </View>
             <TouchableOpacity>
-              <Text style={styles.editPhotoText}>Change the photo</Text>
+              <Text style={styles.editPhotoText}>Changer votre photo</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.optionsContainer}>
             <View style={styles.optionRow}>
-              <Text style={styles.optionLabel}>Dark mode</Text>
+              <Text style={styles.optionLabel}>Mode sombre</Text>
               <Switch
                 trackColor={{ false: "#767577", true: "#4A6572" }}
                 thumbColor={isDarkMode ? "#f5dd4b" : "#f4f3f4"}
@@ -54,14 +54,14 @@ export default function Settings({ navigation }) {
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.saveButton}>
-              <Text style={styles.saveButtonText}>Save</Text>
+              <Text style={styles.saveButtonText}>Sauvegarder</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               style={styles.logoutButton}
               onPress={handleLogout}
             >
-              <Text style={styles.logoutButtonText}>Logout</Text>
+              <Text style={styles.logoutButtonText}>Deconnexion</Text>
             </TouchableOpacity>
           </View>
         </View>

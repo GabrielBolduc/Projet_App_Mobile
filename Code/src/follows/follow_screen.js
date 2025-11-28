@@ -58,7 +58,7 @@ export default function Follow({ navigation }) {
       <SafeAreaView style={styles.container}>
 
         <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>My follow</Text>
+           <Text style={styles.screenTitle}>Mes follow</Text>
         </View>
         
         {loading ? (

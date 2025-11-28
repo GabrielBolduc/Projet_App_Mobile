@@ -31,13 +31,13 @@ export default function Login({ navigation }) {
 
         if (result.success && result.data.length > 0) {
             const user = result.data[0];
-            console.log("Connecté en tant que :", user.username);
+            console.log("Connect as :", user.username);
             
             login(user);
             
             navigation.replace('Home'); 
         } else {
-            Alert.alert("Échec", "Nom d'utilisateur ou mot de passe incorrect.");
+            Alert.alert("Problem", "Invalid.");
         }
     };
 

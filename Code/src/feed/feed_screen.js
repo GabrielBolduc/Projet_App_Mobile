@@ -216,7 +216,7 @@ export default function Feed() {
             }
             ListHeaderComponent={
                 <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Popular</Text>
+                <Text style={styles.sectionTitle}>Populaire</Text>
                 <View style={styles.popularListContainer}>
                     {popularMovies.length > 0 ? (
                         popularMovies.map((movie) => (
@@ -228,7 +228,7 @@ export default function Feed() {
                         <Text style={{color:'#888', fontStyle:'italic'}}>Loading movies...</Text>
                     )}
                 </View>
-                <Text style={styles.sectionTitle}>By your friends</Text>
+                <Text style={styles.sectionTitle}>Par vos amis</Text>
                 </View>
             }
             ListEmptyComponent={
