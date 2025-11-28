@@ -8,7 +8,6 @@ import { useAuth } from './context/AuthContext';
 
 const PRIMARY_COLOR = '#4A6572';
 
-// Composant pour un item de recommandation
 const RecommendationItem = ({ item }) => (
     <View style={styles.card}>
         {/* Header: Qui recommande */}
@@ -49,7 +48,6 @@ export default function Recommendation({ navigation }) {
         if (!user) return;
 
         try {
-            // Appel API avec l'ID de l'utilisateur connecté (receiver_id)
             const result = await executeQuery('get_my_recommendations', { user_id: user.id });
             
             if (result.success) {
@@ -62,7 +60,6 @@ export default function Recommendation({ navigation }) {
         }
     };
 
-    // Recharger quand on arrive sur l'écran
     useFocusEffect(
         useCallback(() => {
             fetchRecommendations();
@@ -103,12 +100,12 @@ export default function Recommendation({ navigation }) {
                     />
                 )}
 
-                {/* Bouton pour Envoyer une nouvelle recommandation */}
+                {/* btn */}
                 <TouchableOpacity 
                     style={styles.fab} 
                     onPress={() => navigation.navigate('AddRecommendation')}
                 >
-                    <Ionicons name="add" size={30} color="#fff" />
+                    <Ionicons name="add" size={32} color="#fff" />
                 </TouchableOpacity>
 
             </SafeAreaView>

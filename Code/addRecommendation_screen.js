@@ -10,61 +10,86 @@ const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#999';
 
 const EMOJI_OPTIONS = [
-    { value: '😁', icon: '😁', name: 'Génial' },
-    { value: '😔', icon: '😔', name: 'Déçu' },
-    { value: '🤯', icon: '🤯', name: 'Surpris' },
-    { value: '😍', icon: '😍', name: 'J’adore' },
+    { value: '🏆', icon: '🏆', name: "Chef d'œuvre" },
+    { value: '😍', icon: '😍', name: "J'adore" },
+    { value: '❤️', icon: '❤️', name: "Coup de cœur" },
+    { value: '🤩', icon: '🤩', name: "Sensationnel" },
+    { value: '😂', icon: '😂', name: "Hilarant" },
+    { value: '🤯', icon: '🤯', name: "Époustouflant" },
+    { value: '🥺', icon: '🥺', name: "Émouvant" },
+    { value: '😱', icon: '😱', name: "Effrayant" },
+    { value: '😴', icon: '😴', name: "Ennuyant" },
+    { value: '🤔', icon: '🤔', name: "Intrigant" },
+    { value: '🍿', icon: '🍿', name: "Divertissant" },
+    { value: '🤮', icon: '🤮', name: "Navet" },
 ];
 
-export default function AddRecommendationScreen({ navigation }) {
+export default function AddRecommendation({ navigation }) {
     const { user } = useAuth(); // Moi (expéditeur)
     
-    const [movieName, setMovieName] = useState('');
     const [explanation, setExplanation] = useState('');
-    
-    // liste amis
-    const [friendsList, setFriendsList] = useState([]);
-    const [loadingFriends, setLoadingFriends] = useState(true);
-
-    const [selectedFriend, setSelectedFriend] = useState(null); // ami qui vas recevoir
+    const [selectedFriend, setSelectedFriend] = useState(null);
     const [selectedEmoji, setSelectedEmoji] = useState(null);
     
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [selectedMovie, setSelectedMovie] = useState(null);
+
+    // listes amis et films
+    const [friendsList, setFriendsList] = useState([]);
+    const [moviesList, setMoviesList] = useState([]);
+    
+    const [loadingFriends, setLoadingFriends] = useState(true);
     const [isSending, setIsSending] = useState(false);
 
+    const [isFriendDropdownOpen, setIsFriendDropdownOpen] = useState(false);
+    const [isMovieDropdownOpen, setIsMovieDropdownOpen] = useState(false);
+
     useEffect(() => {
-        const fetchFriends = async () => {
+        const loadData = async () => {
             if (!user) return;
             try {
                 // recupere amis
-                const result = await executeQuery('get_my_friends', { user_id: user.id });
-                if (result.success) {
-                    const formatted = result.data.map(f => ({
+                const friendsRes = await executeQuery('get_my_friends', { user_id: user.id });
+                if (friendsRes.success) {
+                    setFriendsList(friendsRes.data.map(f => ({
                         id: f.id,
                         name: f.username
-                    }));
-                    setFriendsList(formatted);
+                    })));
                 }
+
+                // recupere films
+                const moviesRes = await executeQuery('get_all_movies');
+                if (moviesRes.success) {
+                    setMoviesList(moviesRes.data.map(m => ({
+                        id: m.id,
+                        title: m.title
+                    })));
+                }
+
             } catch (e) {
-                console.error("Erreur chargement amis:", e);
+                console.error("Erreur chargement données:", e);
             } finally {
                 setLoadingFriends(false);
             }
         };
-        fetchFriends();
+        loadData();
     }, [user]);
 
-    // envoie recommendation
+    // envoie recommandation
     const handleShare = async () => {
-        if (!movieName || !explanation || !selectedFriend || !selectedEmoji) {
-            Alert.alert("Erreur", "Vous devez remplir tout les champs");
+        if (!selectedMovie || !explanation || !selectedFriend || !selectedEmoji) {
+            Alert.alert("Erreur", "Vous devez remplir tous les champs");
             return;
         }
     };
 
     const handleSelectFriend = (friend) => {
         setSelectedFriend(friend);
-        setIsDropdownOpen(false);
+        setIsFriendDropdownOpen(false);
+    };
+
+    const handleSelectMovie = (movie) => {
+        setSelectedMovie(movie);
+        setIsMovieDropdownOpen(false);
     };
 
     return (
@@ -74,11 +99,15 @@ export default function AddRecommendationScreen({ navigation }) {
                 
                 <Text style={styles.sectionTitle}>Ajouter une Recommandation</Text>
 
-                <TouchableOpacity 
-                    style={[styles.input, styles.dropdownTrigger, isDropdownOpen && styles.dropdownTriggerOpen]}
-                    onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-                    activeOpacity={0.7}
-                >
+                <Text style={styles.label}>Pour qui ?</Text>
+                    <TouchableOpacity 
+                        style={[styles.input, styles.dropdownTrigger]}
+                        onPress={() => {
+                            setIsFriendDropdownOpen(!isFriendDropdownOpen);
+                            setIsMovieDropdownOpen(false);
+                        }}
+                        activeOpacity={0.7}
+                    >
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Ionicons 
                             name="person-outline" 
@@ -90,20 +119,13 @@ export default function AddRecommendationScreen({ navigation }) {
                             {selectedFriend ? selectedFriend.name : "Sélectionner un ami"}
                         </Text>
                     </View>
-                    
-                    <Ionicons 
-                        name={isDropdownOpen ? "chevron-up" : "chevron-down"} 
-                        size={20} 
-                        color={SUBTLE_COLOR} 
-                    />
+                    <Ionicons name={isFriendDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={SUBTLE_COLOR} />
                 </TouchableOpacity>
 
-                {isDropdownOpen && (
+                {isFriendDropdownOpen && (
                     <View style={styles.dropdownList}>
                         <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 200 }}>
-                            {loadingFriends ? (
-                                <ActivityIndicator size="small" color={PRIMARY_COLOR} style={{margin: 20}} />
-                            ) : friendsList.length === 0 ? (
+                            {friendsList.length === 0 ? (
                                 <Text style={{padding:15, color:SUBTLE_COLOR, textAlign:'center'}}>Aucun ami trouvé.</Text>
                             ) : (
                                 friendsList.map((friend) => (
@@ -114,7 +136,6 @@ export default function AddRecommendationScreen({ navigation }) {
                                     >
                                         <Ionicons name="person-circle" size={30} color={PRIMARY_COLOR} style={{ marginRight: 10 }} />
                                         <Text style={styles.dropdownItemText}>{friend.name}</Text>
-                                        
                                         {selectedFriend?.id === friend.id && (
                                             <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
                                         )}
@@ -125,14 +146,53 @@ export default function AddRecommendationScreen({ navigation }) {
                     </View>
                 )}
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Rechercher un film (ex: Dune)"
-                    placeholderTextColor={SUBTLE_COLOR}
-                    value={movieName}
-                    onChangeText={setMovieName}
-                />
+                <Text style={styles.label}>Quel film ?</Text>
+                <TouchableOpacity 
+                    style={[styles.input, styles.dropdownTrigger]}
+                    onPress={() => {
+                        setIsMovieDropdownOpen(!isMovieDropdownOpen);
+                        setIsFriendDropdownOpen(false);
+                    }}
+                    activeOpacity={0.7}
+                >
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Ionicons 
+                            name="film-outline" 
+                            size={20} 
+                            color={selectedMovie ? PRIMARY_COLOR : SUBTLE_COLOR} 
+                            style={{ marginRight: 10 }} 
+                        />
+                        <Text style={{ color: selectedMovie ? TEXT_COLOR : SUBTLE_COLOR, fontSize: 16 }}>
+                            {selectedMovie ? selectedMovie.title : "Sélectionner un film"}
+                        </Text>
+                    </View>
+                    <Ionicons name={isMovieDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={SUBTLE_COLOR} />
+                </TouchableOpacity>
 
+                {isMovieDropdownOpen && (
+                    <View style={styles.dropdownList}>
+                        <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 200 }}>
+                            {moviesList.length === 0 ? (
+                                <Text style={{padding:15, color:SUBTLE_COLOR, textAlign:'center'}}>Aucun film trouvé.</Text>
+                            ) : (
+                                moviesList.map((movie) => (
+                                    <TouchableOpacity 
+                                        key={movie.id} 
+                                        style={styles.dropdownItem}
+                                        onPress={() => handleSelectMovie(movie)}
+                                    >
+                                        <Text style={styles.dropdownItemText}>{movie.title}</Text>
+                                        {selectedMovie?.id === movie.id && (
+                                            <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
+                                        )}
+                                    </TouchableOpacity>
+                                ))
+                            )}
+                        </ScrollView>
+                    </View>
+                )}
+
+                <Text style={styles.label}>Pourquoi ?</Text>
                 <TextInput
                     style={[styles.input, styles.multilineInput]}
                     placeholder="Pourquoi ce film ?"
@@ -144,17 +204,27 @@ export default function AddRecommendationScreen({ navigation }) {
                 />
                 
                 <Text style={styles.typeLabel}>Votre réaction</Text>
-                <View style={styles.emojiContainer}>
-                    {EMOJI_OPTIONS.map((option) => (
+                <View style={styles.emojiGrid}>
+                    {EMOJI_OPTIONS.map((option, index) => (
                         <TouchableOpacity
-                            key={option.value}
+                            key={index}
                             style={[
-                                styles.emojiButton,
-                                selectedEmoji === option.value && styles.emojiButtonSelected
+                                styles.emojiCard,
+                                selectedEmoji === option.value && styles.emojiCardSelected
                             ]}
                             onPress={() => setSelectedEmoji(option.value)}
                         >
-                            <Text style={styles.emojiText}>{option.icon}</Text>
+                            <Text style={styles.emojiIcon}>{option.icon}</Text>
+                            <Text 
+                                style={[
+                                    styles.emojiName, 
+                                    selectedEmoji === option.value && styles.emojiNameSelected
+                                ]}
+                                numberOfLines={1} 
+                                adjustsFontSizeToFit
+                            >
+                                {option.name}
+                            </Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -191,6 +261,13 @@ const styles = StyleSheet.create({
         color: PRIMARY_COLOR,
         marginBottom: 25,
         textAlign: 'center',
+    },
+    label: {
+        fontSize: 14, 
+        fontWeight: '600', 
+        color: '#666', 
+        marginBottom: 5, 
+        marginLeft: 2 
     },
     input: {
         backgroundColor: '#fff',
@@ -236,6 +313,7 @@ const styles = StyleSheet.create({
     dropdownItemText: {
         fontSize: 16,
         color: TEXT_COLOR,
+        flex: 1,
     },
     multilineInput: {
         height: 120, 
@@ -248,24 +326,52 @@ const styles = StyleSheet.create({
         color: TEXT_COLOR,
         marginBottom: 10,
     },
-    emojiContainer: {
+    emojiGrid: {
+        flex: 1,
         flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
         justifyContent: 'space-between',
         marginBottom: 30,
     },
-    emojiButton: {
-        padding: 10,
-        borderRadius: 10,
-        backgroundColor: '#EAEAEA',
+    emojiCard: {
+        width: '18%',
+        aspectRatio: 1,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        paddingVertical: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
         borderWidth: 2,
         borderColor: 'transparent',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    emojiButtonSelected: {
+    emojiCardSelected: {
         borderColor: PRIMARY_COLOR,
-        backgroundColor: '#e6f0f4',
+        backgroundColor: '#F0F7F9',
+        borderWidth: 2,
     },
-    emojiText: {
-        fontSize: 32,
+    emojiIcon: {
+        fontSize: 30,
+        textAlign: 'center',
+        marginBottom: 2,
+        includeFontPadding: false,
+    },
+    emojiName: {
+        fontSize: 8,
+        color: SUBTLE_COLOR,
+        textAlign: 'center',
+        paddingHorizontal: 2,
+        fontWeight: '500',
+    },
+    emojiNameSelected: {
+        color: PRIMARY_COLOR,
+        fontWeight: 'bold',
     },
     primaryButton: {
         backgroundColor: PRIMARY_COLOR,
