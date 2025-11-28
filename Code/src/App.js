@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/authContext';
 
 
 import Feed from './feed/feed_screen';

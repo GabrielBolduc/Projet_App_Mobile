@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { executeQuery } from '../services/api'; 
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/authContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
 
