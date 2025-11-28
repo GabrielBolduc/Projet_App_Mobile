@@ -75,6 +75,11 @@ export default function AddFollower({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
+
+                {/* btn retour */}    
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
+                </TouchableOpacity>
                 
                 <View style={{flexDirection:'row', alignItems:'center', marginBottom:20, justifyContent:'center'}}>
                      <Text style={[styles.sectionTitle, {marginBottom:0}]}>Ajouter des Amis</Text>

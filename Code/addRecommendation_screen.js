@@ -13,7 +13,7 @@ const EMOJI_OPTIONS = [
     { value: '🏆', icon: '🏆', name: "Chef d'œuvre" },
     { value: '😍', icon: '😍', name: "J'adore" },
     { value: '❤️', icon: '❤️', name: "Coup de cœur" },
-    { value: '🤩', icon: '🤩', name: "Sensationnel" },
+    { value: '🚀', icon: '🚀', name: "Sensationnel" },
     { value: '😂', icon: '😂', name: "Hilarant" },
     { value: '🤯', icon: '🤯', name: "Époustouflant" },
     { value: '🥺', icon: '🥺', name: "Émouvant" },
@@ -21,11 +21,11 @@ const EMOJI_OPTIONS = [
     { value: '😴', icon: '😴', name: "Ennuyant" },
     { value: '🤔', icon: '🤔', name: "Intrigant" },
     { value: '🍿', icon: '🍿', name: "Divertissant" },
-    { value: '🤮', icon: '🤮', name: "Navet" },
+    { value: '🤮', icon: '🤮', name: "Mauvais" },
 ];
 
 export default function AddRecommendation({ navigation }) {
-    const { user } = useAuth(); // Moi (expéditeur)
+    const { user } = useAuth(); // user 
     
     const [explanation, setExplanation] = useState('');
     const [selectedFriend, setSelectedFriend] = useState(null);
@@ -97,7 +97,13 @@ export default function AddRecommendation({ navigation }) {
 
             <ScrollView contentContainerStyle={styles.content}>
                 
+                {/* btn retour */}    
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
+                </TouchableOpacity>
+                
                 <Text style={styles.sectionTitle}>Ajouter une Recommandation</Text>
+
 
                 <Text style={styles.label}>Pour qui ?</Text>
                     <TouchableOpacity 

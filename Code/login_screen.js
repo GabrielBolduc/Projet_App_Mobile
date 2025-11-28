@@ -7,7 +7,7 @@ import { useAuth } from './context/AuthContext';
 const PRIMARY_COLOR = '#4A6572';
 
 export default function Login({ navigation }) {
-    const { login } = useAuth(); // <--- 2. On récupère la fonction pour sauvegarder le user
+    const { login } = useAuth(); 
     
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
