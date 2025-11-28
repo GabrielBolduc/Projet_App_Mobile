@@ -1,0 +1,82 @@
+[
+  {
+    "name": "login_user",
+    "string": "SELECT * FROM User WHERE username=\"?username\" AND password=\"?password\";",
+    "type": 0
+  },
+  {
+    "name": "create_user",
+    "string": "INSERT INTO User (username, password, photo_profile) VALUES (\"?username\", \"?password\", \"?photo_profile\");",
+    "type": 1
+  },
+  {
+    "name": "get_all_movies",
+    "string": "SELECT * FROM Movie ORDER BY title ASC;",
+    "type": 0
+  },
+  {
+    "name": "get_popular_movies",
+    "string": "SELECT * FROM Movie ORDER BY duration DESC LIMIT 3;",
+    "type": 0
+  },
+  {
+    "name": "create_rating",
+    "string": "INSERT INTO Ratings (user_id, movie_id, rating, comment) VALUES (?user_id, ?movie_id, ?rating, \"?comment\");",
+    "type": 1
+  },
+  {
+    "name": "get_my_ratings",
+    "string": "SELECT r.id, r.rating, r.comment, r.created_at, m.id as movie_id, m.title as movie_title, m.duration, m.director FROM Ratings r JOIN Movie m ON r.movie_id = m.id WHERE r.user_id=?user_id ORDER BY r.created_at DESC;",
+    "type": 0
+  },
+  {
+    "name": "update_rating",
+    "string": "UPDATE Ratings SET rating=?rating, comment=\"?comment\" WHERE id=?id AND user_id=?user_id;",
+    "type": 1
+  },
+  {
+    "name": "delete_rating",
+    "string": "DELETE FROM Ratings WHERE id=?id AND user_id=?user_id;",
+    "type": 1
+  },
+  {
+    "name": "follow_user",
+    "string": "INSERT INTO Follow (follower_id, followed_id) VALUES (?follower_id, ?followed_id);",
+    "type": 1
+  },
+  {
+    "name": "unfollow_user",
+    "string": "DELETE FROM Follow WHERE follower_id=?follower_id AND followed_id=?followed_id;",
+    "type": 1
+  },
+  {
+    "name": "get_my_friends",
+    "string": "SELECT u.id, u.username, u.photo_profile FROM User u JOIN Follow f ON u.id = f.followed_id WHERE f.follower_id=?user_id;",
+    "type": 0
+  },
+  {
+    "name": "search_users",
+    "string": "SELECT id, username, photo_profile FROM User WHERE username LIKE \"?query%\";",
+    "type": 0
+  },
+  {
+    "name": "get_feed",
+    "string": "SELECT r.id, r.rating, r.comment, r.created_at, u.username, u.photo_profile, m.title as movie_title, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'like') as likes_count, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'dislike') as dislikes_count FROM Ratings r JOIN User u ON r.user_id = u.id JOIN Movie m ON r.movie_id = m.id WHERE r.user_id IN (SELECT followed_id FROM Follow WHERE follower_id = ?user_id) OR r.user_id = ?user_id ORDER BY r.created_at DESC;",
+    "type": 0
+  },
+  {
+    "name": "add_reaction",
+    "string": "INSERT INTO Reaction (user_id, rating_id, type) VALUES (?user_id, ?rating_id, \"?type\") ON DUPLICATE KEY UPDATE type=\"?type\";",
+    "type": 1
+  },
+  {
+    "name": "send_recommendation",
+    "string": "INSERT INTO Recommendation (sender_id, receiver_id, movie_id, message, emoji) VALUES (?sender_id, ?receiver_id, ?movie_id, \"?message\", \"?emoji\");",
+    "type": 1
+  },
+  {
+    "name": "get_my_recommendations",
+    "string": "SELECT rec.*, m.title as movie_title, u.username as sender_name FROM Recommendation rec JOIN Movie m ON rec.movie_id = m.id JOIN User u ON rec.sender_id = u.id WHERE rec.receiver_id = ?user_id ORDER BY rec.created_at DESC;",
+    "type": 0
+  }
+]
