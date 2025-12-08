@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native'; // Ajout de Image
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native'; 
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
-// Les constantes de couleurs fixes sont remplacées par le thème dynamique
 const PRIMARY_COLOR = '#4A6572'; 
 
 function StarRating({ rating }) {
@@ -82,11 +81,21 @@ function ReviewCard({ item, currentUserId }) {
       {/* header */}
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
-          <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-             <Text style={{color:'#fff', fontWeight:'bold'}}>
-                {item.username ? item.username.charAt(0).toUpperCase() : '?'}
-             </Text>
-          </View>
+          
+          {/* affichage photo*/}
+          {item.photo_profile ? (
+             <Image 
+                source={{ uri: item.photo_profile }} 
+                style={styles.avatar} 
+             />
+          ) : (
+             <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+                <Text style={{color:'#fff', fontWeight:'bold'}}>
+                   {item.username ? item.username.charAt(0).toUpperCase() : '?'}
+                </Text>
+             </View>
+          )}
+
           <View>
             <Text style={[styles.userName, { color: theme.text }]}>{item.username}</Text>
             <Text style={[styles.timestamp, { color: theme.subText }]}>
@@ -307,6 +316,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    // Background géré dynamiquement
   },
   cardHeader: {
     flexDirection: 'row',

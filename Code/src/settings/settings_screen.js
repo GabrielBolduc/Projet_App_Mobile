@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ActivityIndicator, Image } from 'react-native'; // Ajout de Image
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons'; 
 import { useAuth, Colors } from '../context/authContext'; 
@@ -7,30 +7,59 @@ import { executeQuery } from '../services/api';
 
 const PRIMARY_COLOR = '#4A6572';
 
+const fetchRandomProfilePicture = () => {
+    const gender = Math.random() < 0.5 ? 'men' : 'women';
+    const index = Math.floor(Math.random() * 99) + 1; 
+    return `https://randomuser.me/api/portraits/${gender}/${index}.jpg`;
+};
+
 export default function Settings({ navigation }) {
   const { user, logout, login } = useAuth(); 
   
-  // initialiser local state avec bool
+  // local state pour edit
   const [isDarkMode, setIsDarkMode] = useState(Boolean(user?.dark_mode_enabled));
+  const [profilePhoto, setProfilePhoto] = useState(user?.photo_profile || null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Theme
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const toggleSwitch = () => setIsDarkMode(previousState => !previousState);
 
-  // Save modif
+  const handleChangePhoto = () => {
+      const newPhoto = fetchRandomProfilePicture();
+      setProfilePhoto(newPhoto);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
+        // Save du theme
         await executeQuery('update_dark_mode', {
             status: isDarkMode ? 1 : 0,
             user_id: user.id
         });
 
-        login({ ...user, dark_mode_enabled: isDarkMode ? 1 : 0 });
+        // Save de la photo
+        if (profilePhoto !== user?.photo_profile) {
+            await executeQuery('update_profile_picture', {
+                photo_profile: profilePhoto,
+                user_id: user.id
+            });
+        }
+
+        // update du context global
+        login({ 
+            ...user, 
+            dark_mode_enabled: isDarkMode ? 1 : 0,
+            photo_profile: profilePhoto
+        });
+
+        Alert.alert("Succès", "Photo de profile modifier");
 
     } catch (e) {
-        Alert.alert("Erreur", "Impossible de sauvegarder la préférence.");
+        console.error(e);
+        Alert.alert("Erreur", "Impossible de sauvegarder les modifications.");
     } finally {
         setIsSaving(false);
     }
@@ -46,7 +75,6 @@ export default function Settings({ navigation }) {
 
   return (
     <SafeAreaProvider>
-      {/* theme */}
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         
         <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
@@ -56,12 +84,25 @@ export default function Settings({ navigation }) {
         <View style={styles.contentContainer}>
 
           <View style={styles.profileSection}>
-            <View style={[styles.avatarContainer, { backgroundColor: theme.card, borderColor: PRIMARY_COLOR }]}>
-                <Ionicons name="person-outline" size={60} color={PRIMARY_COLOR} />
-            </View>
-            <TouchableOpacity>
+            {/* Conteneur Avatar Cliquable */}
+            <TouchableOpacity 
+                style={[styles.avatarContainer, { backgroundColor: theme.card, borderColor: PRIMARY_COLOR }]}
+                onPress={handleChangePhoto}
+            >
+                {profilePhoto ? (
+                    <Image 
+                        source={{ uri: profilePhoto }} 
+                        style={styles.avatarImage} 
+                    />
+                ) : (
+                    <Ionicons name="person-outline" size={60} color={PRIMARY_COLOR} />
+                )}
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleChangePhoto}>
               <Text style={styles.editPhotoText}>Changer votre photo</Text>
             </TouchableOpacity>
+            
             <Text style={{ color: theme.subText, marginTop: 5, fontSize: 16 }}>
                 {user?.username}
             </Text>
@@ -138,6 +179,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
+    position: 'relative', //pour place le badge
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
   },
   editPhotoText: {
     color: PRIMARY_COLOR,
