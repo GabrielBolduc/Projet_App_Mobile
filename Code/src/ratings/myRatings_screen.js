@@ -1,211 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from './context/AuthContext';
-import { executeQuery } from './services/api';
+import { useFocusEffect } from '@react-navigation/native'; 
+import { executeQuery } from '../services/api'; 
+import { useAuth } from '../context/authContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
-const DANGER_COLOR = '#D32F2F';
+const TEXT_COLOR = '#333';
+const SUBTLE_COLOR = '#888';
 
-export default function RateMovieScreen({ navigation, route }) {
-  const { user } = useAuth();
-  
-  const existingItem = route.params?.item;
-  const isEditMode = !!existingItem;
-
-  const [selectedMovie, setSelectedMovie] = useState(
-    existingItem 
-      ? { id: existingItem.movie_id, title: existingItem.movie_title } 
-      : null
-  );
-  const [rating, setRating] = useState(existingItem ? existingItem.rating : 0);
-  const [comment, setComment] = useState(existingItem ? existingItem.comment : '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (route.params?.selection) {
-      setSelectedMovie(route.params.selection);
-    }
-  }, [route.params?.selection]);
-
-  const handleSelectMoviePress = () => {
-    navigation.navigate('MovieList'); 
-  };
-
-  const handleSave = async () => {
-    if (!selectedMovie) {
-        Alert.alert("Attention", "Veuillez sélectionner un film.");
-        return;
-    }
-    if (rating === 0) {
-        Alert.alert("Attention", "Veuillez donner une note (étoiles).");
-        return;
-    }
-    if (!user) return;
-
-    setIsSubmitting(true);
-
-    try {
-        let result;
-
-        if (isEditMode) {
-            // --- UPDATE ---
-            result = await executeQuery('update_rating', {
-                rating: rating,
-                comment: comment,
-                id: existingItem.id, // ID rating
-                user_id: user.id
-            });
-        } else {
-            // --- INSERT ---
-            result = await executeQuery('create_rating', {
-                user_id: user.id,
-                movie_id: selectedMovie.id,
-                rating: rating,
-                comment: comment
-            });
-        }
-
-        if (result.success) {
-            // Persistence & UX : On retourne à l'écran précédent qui se mettra à jour
-            navigation.goBack();
-        } else {
-            Alert.alert("Erreur", "Impossible de sauvegarder. Vérifiez si vous n'avez pas déjà noté ce film.");
-        }
-
-    } catch (e) {
-        console.error(e);
-        Alert.alert("Erreur", "Une erreur réseau est survenue.");
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
-
-  // delete
-  const handleDelete = () => {
-    Alert.alert(
-      "Supprimer l'avis",
-      "Êtes-vous sûr de vouloir supprimer cette note ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        { 
-          text: "Supprimer", 
-          style: "destructive", 
-          onPress: async () => {
-            setIsSubmitting(true);
-            const result = await executeQuery('delete_rating', {
-                id: existingItem.id,
-                user_id: user.id
-            });
-            
-            setIsSubmitting(false);
-            
-            if (result.success) {
-                navigation.goBack();
-            } else {
-                Alert.alert("Erreur", "Impossible de supprimer.");
-            }
-          }
-        }
-      ]
+function StarRating({ rating }) {
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    stars.push(
+      <Ionicons
+        key={i}
+        name={i <= rating ? "star" : "star-outline"}
+        size={16}
+        color="#FFD700"
+        style={{ marginRight: 2 }}
+      />
     );
+  }
+  return <View style={{ flexDirection: 'row' }}>{stars}</View>;
+}
+
+export default function MyRatings({ navigation }) {
+  const { user } = useAuth(); // user connecter
+  const [ratings, setRatings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // charcher donne depuis martha
+  const fetchRatings = async () => {
+    
+    try {
+        // appel api
+        const result = await executeQuery('get_my_ratings', { user_id: user.id });
+        
+        if (result.success) {
+            setRatings(result.data);
+        } else {
+            console.log("Erreur récupération ratings:", result.error);
+        }
+    } catch (e) {
+        console.error("Erreur réseau:", e);
+    } finally {
+        setLoading(false);
+    }
   };
+
+  // reload ecran (pour voir les nouveaux rating)
+  useFocusEffect(
+    useCallback(() => {
+      fetchRatings();
+    }, [user])
+  );
+
+  // !!!
+  // Pull to refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchRatings();
+    setRefreshing(false);
+  };
+
+  // navig vers mode edit
+  const handleEditPress = (item) => {
+    navigation.navigate('RateMovie', { item: item });
+  };
+
+  // navig vers mode add
+  const handleAddPress = () => {
+    navigation.navigate('RateMovie');
+  };
+
+  const renderRatingItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={() => handleEditPress(item)} 
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardContent}>
+        {/* header */}
+        <View style={styles.cardHeader}>
+          <Text style={styles.movieTitle}>{item.movie_title}</Text>
+          <Text style={styles.dateText}>
+            {item.created_at ? new Date(item.created_at).toLocaleDateString('fr-CA') : ''}
+          </Text>
+        </View>
+
+        {/* etoiles */}
+        <View style={styles.ratingContainer}>
+          <StarRating rating={item.rating} />
+        </View>
+
+        {/* commentaire */}
+        {item.comment ? (
+          <Text style={styles.commentText} numberOfLines={3}>
+            {item.comment}
+          </Text>
+        ) : (
+          <Text style={styles.noCommentText}>Aucun commentaire</Text>
+        )}
+      </View>
+      
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditMode ? "Modifier l'avis" : "Ajouter un rating"}
-        </Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.content}>
-
-        {/* selection film */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Film</Text>
-          {selectedMovie ? (
-            <TouchableOpacity style={styles.selectedMovieCard} onPress={handleSelectMoviePress}>
-              <View style={styles.movieIconPlaceholder}>
-                 <Ionicons name="film" size={24} color="#fff" />
-              </View>
-              <Text style={styles.selectedMovieTitle}>{selectedMovie.title}</Text>
-              <Ionicons name="swap-horizontal" size={20} color={PRIMARY_COLOR} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.selectButton} onPress={handleSelectMoviePress}>
-              <Text style={styles.selectButtonText}>Sélectionner un film</Text>
-              <Ionicons name="chevron-forward" size={20} color="#fff" />
-            </TouchableOpacity>
-          )}
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        
+        {/* header */}
+        <View style={styles.headerContainer}>
+           <Text style={styles.screenTitle}>Mes Ratings</Text>
         </View>
 
-        {/* rating */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Note finale</Text>
-          <View style={styles.starsContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                <Ionicons
-                  name={star <= rating ? "star" : "star-outline"}
-                  size={40}
-                  color="#FFD700"
-                  style={{ marginHorizontal: 5 }}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* avis */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Ton avis</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Qu'avez-vous pensé de ce film ?"
-            placeholderTextColor="#aaa"
-            multiline={true}
-            numberOfLines={5}
-            value={comment}
-            onChangeText={setComment}
-            textAlignVertical="top"
-          />
-        </View>
+        {/* list */}
+        {loading && !refreshing ? (
+             <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+        ) : (
+            <FlatList
+            data={ratings}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderRatingItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+            }
+            
+            ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>Vous n'avez pas encore noté de films.</Text>
+                </View>
+            }
+            />
+        )}
 
         {/* btn */}
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={styles.saveButton} 
-            onPress={handleSave}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-                <ActivityIndicator color="#fff" />
-            ) : (
-                <Text style={styles.saveButtonText}>Sauvegarder</Text>
-            )}
-          </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.fab} 
+          onPress={handleAddPress}
+        >
+          <Ionicons name="add" size={32} color="#fff" />
+        </TouchableOpacity>
 
-          {isEditMode && (
-            <TouchableOpacity 
-                style={styles.deleteButton} 
-                onPress={handleDelete}
-                disabled={isSubmitting}
-            >
-              <Text style={styles.deleteButtonText}>Supprimer</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -214,121 +159,91 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  headerContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
-  headerTitle: {
-    fontSize: 18,
+  screenTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: PRIMARY_COLOR,
   },
-  content: {
+  listContent: {
     padding: 20,
+    paddingBottom: 80, 
   },
-  section: {
-    marginBottom: 25,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    // Ombre
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
+  cardContent: {
+    flex: 1, 
+    marginRight: 5,
   },
-  selectButton: {
-    backgroundColor: PRIMARY_COLOR,
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginBottom: 5,
   },
-  selectButtonText: {
-    color: '#fff',
+  movieTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  selectedMovieCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: PRIMARY_COLOR,
-  },
-  movieIconPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 5,
-    backgroundColor: PRIMARY_COLOR,
-    justifyContent: 'center',
-    alignItems: 'center',
+    color: TEXT_COLOR,
+    flex: 1, 
     marginRight: 10,
   },
-  selectedMovieTitle: {
-    flex: 1,
+  dateText: {
+    fontSize: 12,
+    color: SUBTLE_COLOR,
+  },
+  ratingContainer: {
+    marginBottom: 8,
+  },
+  commentText: {
+    color: '#555',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  noCommentText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    color: SUBTLE_COLOR,
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
   },
-  starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  textArea: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    minHeight: 120,
-    fontSize: 16,
-    color: '#333',
-  },
-  footer: {
-    marginTop: 10,
-  },
-  saveButton: {
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: PRIMARY_COLOR,
-    padding: 15,
-    borderRadius: 25,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    elevation: 2,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: DANGER_COLOR,
-    padding: 13,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: DANGER_COLOR,
-    fontSize: 16,
-    fontWeight: 'bold',
+    // ombre
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
   },
 });
