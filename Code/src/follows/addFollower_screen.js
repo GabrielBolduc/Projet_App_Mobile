@@ -5,11 +5,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
+// On peut garder cette couleur si elle est commune, sinon utiliser theme.primary
 const PRIMARY_COLOR = '#4A6572';
-const TEXT_COLOR = '#333';
-const SUBTLE_COLOR = '#999';
 
-function UserSearchResultItem({ user, onToggleFollow }) {
+function UserSearchResultItem({ user, onToggleFollow, theme }) {
     
     const buttonProps = {
         icon: "person-add",
@@ -17,10 +16,17 @@ function UserSearchResultItem({ user, onToggleFollow }) {
         onPress: () => onToggleFollow(user.id, true) 
     };
 
+    // Si on voulait gérer le cas "déjà suivi" (même si la liste filtre déjà)
+    if (user.isFollowing) {
+         buttonProps.icon = "checkmark-circle";
+         buttonProps.color = theme.primary;
+         buttonProps.onPress = () => {}; 
+    }
+
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
             <View style={styles.userInfo}>
-                <View style={styles.avatarContainer}>
+                <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
                     {user.photo_profile ? (
                         <Image 
                             source={{ uri: user.photo_profile }} 
@@ -30,7 +36,7 @@ function UserSearchResultItem({ user, onToggleFollow }) {
                         <Ionicons name="person" size={24} color="#fff" />
                     )}
                 </View>
-                <Text style={styles.userName}>{user.name}</Text>
+                <Text style={[styles.userName, { color: theme.text }]}>{user.name}</Text>
             </View>
             
             <TouchableOpacity 
@@ -48,7 +54,7 @@ function UserSearchResultItem({ user, onToggleFollow }) {
 }
 
 export default function AddFollower({ navigation }) {
-    const { user } = useAuth(); 
+    const { user, theme } = useAuth(); // Récupération du thème
     const [searchText, setSearchText] = useState('');
     const [searchResults, setSearchResults] = useState([]); 
     const [loading, setLoading] = useState(true);
@@ -58,7 +64,6 @@ export default function AddFollower({ navigation }) {
 
         try {
             const friendsRes = await executeQuery('get_my_friends', { user_id: user.id });
-            
             const followingIds = friendsRes.success ? friendsRes.data.map(f => f.id) : []; 
 
             const usersRes = await executeQuery('search_users', { query: '' }); 
@@ -66,7 +71,7 @@ export default function AddFollower({ navigation }) {
             if (usersRes.success) {
                 const formattedUsers = usersRes.data
                     .filter(u => u.id !== user.id)
-                    .filter(u => !followingIds.includes(u.id)) 
+                    .filter(u => !followingIds.includes(u.id)) // On filtre ceux qu'on suit déjà
                     .map(u => ({
                         id: u.id,
                         name: u.username, 
@@ -89,10 +94,7 @@ export default function AddFollower({ navigation }) {
     
     const handleFollowToggle = async (followedId, shouldFollow) => {
         if (!user) return;
-        
-        if (!shouldFollow) {
-            return;
-        }
+        if (!shouldFollow) return;
         
         setLoading(true); 
 
@@ -103,7 +105,7 @@ export default function AddFollower({ navigation }) {
             });
 
             if (result.success) {
-                await loadData(); 
+                await loadData(); // Recharger la liste pour enlever l'ami ajouté
             } else {
                 console.error("Erreur follow:", result.error);
                 Alert.alert("Erreur", "Impossible de suivre cet utilisateur.");
@@ -121,30 +123,31 @@ export default function AddFollower({ navigation }) {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={styles.content}>
-   
+
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
+                    <Ionicons name="arrow-back" size={24} color={theme.primary} />
                 </TouchableOpacity>
                 
                 <View style={{flexDirection:'row', alignItems:'center', marginBottom:20, justifyContent:'center'}}>
-                     <Text style={[styles.sectionTitle, {marginBottom:0}]}>Ajouter des Amis</Text>
+                     <Text style={[styles.sectionTitle, { color: theme.primary, marginBottom:0 }]}>Ajouter des Amis</Text>
                 </View>
                 
-                <View style={styles.searchBar}>
-                    <Ionicons name="search" size={20} color={SUBTLE_COLOR} style={{ marginRight: 10 }} />
+                {/* Barre de recherche */}
+                <View style={[styles.searchBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                    <Ionicons name="search" size={20} color={theme.subText} style={{ marginRight: 10 }} />
                     <TextInput
-                        style={styles.searchInput}
+                        style={[styles.searchInput, { color: theme.text }]}
                         placeholder="Rechercher par nom d'utilisateur..."
-                        placeholderTextColor={SUBTLE_COLOR}
+                        placeholderTextColor={theme.subText}
                         value={searchText}
                         onChangeText={setSearchText}
                     />
                 </View>
 
                 {loading ? (
-                    <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+                    <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
                 ) : (
                     <FlatList
                         data={filteredResults}
@@ -153,11 +156,12 @@ export default function AddFollower({ navigation }) {
                             <UserSearchResultItem 
                                 user={item} 
                                 onToggleFollow={handleFollowToggle}
+                                theme={theme} // On passe le thème à l'item
                             />
                         )}
                         contentContainerStyle={styles.listContent}
                         ListEmptyComponent={
-                            <Text style={styles.emptyText}>Aucun utilisateur trouvé.</Text>
+                            <Text style={[styles.emptyText, { color: theme.subText }]}>Aucun utilisateur trouvé.</Text>
                         }
                     />
                 )}
@@ -169,7 +173,7 @@ export default function AddFollower({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        // background géré dynamiquement
     },
     content: {
         flex: 1,
@@ -178,15 +182,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: PRIMARY_COLOR,
+        // color gérée dynamiquement
         marginBottom: 20,
         textAlign: 'center',
     },
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderColor: '#E0E0E0',
+        // bg et border gérés dynamiquement
         borderWidth: 1,
         marginBottom: 20,
         borderRadius: 8,
@@ -196,13 +199,12 @@ const styles = StyleSheet.create({
     searchInput: {
         flex: 1,
         fontSize: 16,
-        color: TEXT_COLOR,
+        // color gérée dynamiquement
     },
     listContent: {
         paddingBottom: 20,
     },
     card: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
@@ -214,6 +216,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        // bg géré dynamiquement
     },
     userInfo: {
         flexDirection: 'row',
@@ -223,11 +226,11 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: PRIMARY_COLOR,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
         overflow: 'hidden',
+        // bg géré dynamiquement
     },
     profileImage: {
         width: '100%', 
@@ -237,7 +240,7 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 16,
         fontWeight: '600',
-        color: TEXT_COLOR,
+        // color gérée dynamiquement
     },
     actionButton: {
         padding: 5,
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
     emptyText: {
         textAlign: 'center',
         marginTop: 50,
-        color: SUBTLE_COLOR,
         fontSize: 16,
+        // color gérée dynamiquement
     }
 });

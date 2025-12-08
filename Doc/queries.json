@@ -61,7 +61,7 @@
   },
   {
     "name": "get_feed",
-    "string": "SELECT r.id, r.rating, r.comment, r.created_at, u.username, u.photo_profile, m.title as movie_title, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'like') as likes_count, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'dislike') as dislikes_count FROM Ratings r JOIN User u ON r.user_id = u.id JOIN Movie m ON r.movie_id = m.id WHERE r.user_id IN (SELECT followed_id FROM Follow WHERE follower_id = ?user_id) OR r.user_id = ?user_id ORDER BY r.created_at DESC;",
+    "string": "SELECT r.id, r.rating, r.comment, r.created_at, u.username, u.photo_profile, m.title as movie_title, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'like') as likes_count, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'dislike') as dislikes_count, (SELECT type FROM Reaction WHERE rating_id = r.id AND user_id = ?user_id) as current_user_reaction FROM Ratings r JOIN User u ON r.user_id = u.id JOIN Movie m ON r.movie_id = m.id WHERE r.user_id IN (SELECT followed_id FROM Follow WHERE follower_id = ?user_id) OR r.user_id = ?user_id ORDER BY r.created_at DESC;",
     "type": 0
   },
   {

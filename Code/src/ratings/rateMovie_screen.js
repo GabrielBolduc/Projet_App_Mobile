@@ -214,12 +214,10 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20, 
       paddingVertical: 15, 
       borderBottomWidth: 1, 
-      // backgroundColor et borderColor gere par theme
   },
   headerTitle: { 
       fontSize: 20, 
       fontWeight: 'bold', 
-      // color gere par theme.primary
   },
   content: { padding: 20 },
   section: { marginBottom: 25 },
@@ -227,7 +225,6 @@ const styles = StyleSheet.create({
       fontSize: 16, 
       fontWeight: '600', 
       marginBottom: 10,
-      // color gere par theme.text
   },
   selectButton: { 
       backgroundColor: PRIMARY_COLOR, 
@@ -249,7 +246,6 @@ const styles = StyleSheet.create({
       padding: 10, 
       borderRadius: 10, 
       borderWidth: 1, 
-      // backgroundColor et borderColor gere dynamiquement
   },
   movieIconPlaceholder: { 
       width: 40, 
@@ -264,7 +260,6 @@ const styles = StyleSheet.create({
       flex: 1, 
       fontSize: 16, 
       fontWeight: 'bold', 
-      // color gere par theme.text
   },
   starsContainer: { 
       flexDirection: 'row', 
@@ -272,7 +267,6 @@ const styles = StyleSheet.create({
       padding: 15, 
       borderRadius: 10, 
       borderWidth: 1, 
-      // backgroundColor et borderColor gere par theme
   },
   textArea: { 
       borderRadius: 10, 
@@ -280,7 +274,6 @@ const styles = StyleSheet.create({
       borderWidth: 1, 
       minHeight: 120, 
       fontSize: 16, 
-      // backgroundColor, color et borderColor gere par theme
   },
   footer: { marginTop: 10 },
   saveButton: { 

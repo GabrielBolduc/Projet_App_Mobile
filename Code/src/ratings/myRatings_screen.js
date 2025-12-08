@@ -152,18 +152,15 @@ export default function MyRatings({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor gere dynamiquement
   },
   headerContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    // backgroundColor et borderBottomColor gere dynamiquement
   },
   screenTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    // color gere dynamiquement
   },
   listContent: {
     padding: 20,
@@ -196,11 +193,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1, 
     marginRight: 10,
-    // color gere dynamiquement
   },
   dateText: {
     fontSize: 12,
-    // color gere dynamiquement
   },
   ratingContainer: {
     marginBottom: 8,
@@ -208,12 +203,10 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 14,
     lineHeight: 20,
-    // color gere dynamiquement
   },
   noCommentText: {
     fontSize: 14,
     fontStyle: 'italic',
-    // color gere dynamiquement
   },
   emptyContainer: {
     alignItems: 'center',
@@ -221,7 +214,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    // color gere dynamiquement
   },
   fab: {
     position: 'absolute',
@@ -236,6 +228,5 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 3,
-    // backgroundColor gere dynamiquement
   },
 });

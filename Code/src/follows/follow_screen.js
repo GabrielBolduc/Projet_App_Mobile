@@ -1,15 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Image, Alert } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native'; 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
+// On garde PRIMARY_COLOR s'il ne change pas, sinon on peut utiliser theme.primary
 const PRIMARY_COLOR = '#4A6572';
 
 export default function Follow({ navigation }) {
-  const { user } = useAuth(); 
+  // 1. Récupération du thème
+  const { user, theme } = useAuth(); 
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,10 +36,44 @@ export default function Follow({ navigation }) {
     }, [user])
   );
 
+  const handleUnfollow = (friendId, friendName) => {
+    Alert.alert(
+      "Ne plus suivre",
+      `Voulez-vous vraiment retirer ${friendName} de vos amis ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Retirer", 
+          style: "destructive", 
+          onPress: async () => {
+            setLoading(true);
+            try {
+                const result = await executeQuery('unfollow_user', {
+                    follower_id: user.id,
+                    followed_id: friendId
+                });
+                
+                if (result.success) {
+                    fetchFriends(); 
+                } else {
+                    Alert.alert("Erreur", "Impossible de supprimer cet ami.");
+                    setLoading(false);
+                }
+            } catch (e) {
+                console.error(e);
+                setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    // 2. Application de la couleur de carte dynamique
+    <View style={[styles.card, { backgroundColor: theme.card }]}>
         <View style={styles.userInfo}>
-            <View style={styles.avatarContainer}>
+            <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
                 {item.photo_profile ? (
                     <Image 
                         source={{ uri: item.photo_profile }} 
@@ -49,44 +85,47 @@ export default function Follow({ navigation }) {
                     </Text>
                 )}
             </View>
-            <Text style={styles.title}>{item.username}</Text>
+            
+            <Text style={[styles.title, { color: theme.text }]}>{item.username}</Text>
         </View>
         
         <TouchableOpacity 
-            onPress={() => {}} // Placeholder pour la suppression du follow
+            onPress={() => handleUnfollow(item.id, item.username)} 
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
         >
-            <Ionicons name="close-circle-outline" size={28} color="#D32F2F" />
+            <Ionicons name="close-circle-outline" size={28} color={theme.danger} />
         </TouchableOpacity>
     </View>
   );
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
+      {/* fond d'ecran dynamique */}
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
 
-        <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>Mes follow</Text>
+        <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+           <Text style={[styles.screenTitle, { color: theme.primary }]}>Mes follow</Text>
         </View>
         
         {loading ? (
-            <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+            <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
         ) : (
             <FlatList
                 data={friends}
-                keyExtractor={item => item.id ? item.id.toString() : item.username} 
+                keyExtractor={item => item.id.toString()} 
                 renderItem={renderItem}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={{alignItems:'center', marginTop: 50}}>
-                        <Text style={{color:'#888'}}>Vous ne suivez personne pour l'instant.</Text>
+                        <Text style={{color: theme.subText}}>Vous ne suivez personne pour l'instant.</Text>
                     </View>
                 }
             />
         )}
 
         <TouchableOpacity 
-            style={styles.fab} 
+            style={[styles.fab, { backgroundColor: theme.primary }]} 
             onPress={() => navigation.navigate('AddFollower')}
         >
             <Ionicons name="person-add" size={24} color="#fff" />
@@ -100,26 +139,21 @@ export default function Follow({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
     },
     headerContainer: {
         paddingHorizontal: 20,
         paddingVertical: 15,
-        backgroundColor: '#fff',
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
     screenTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: PRIMARY_COLOR,
    },
     listContent: {
         padding: 20,
         paddingBottom: 80,
     },
     card: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
@@ -140,7 +174,6 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: PRIMARY_COLOR,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
@@ -154,13 +187,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
     },
     fab: {
         position: 'absolute',
         bottom: 30,
         right: 30,
-        backgroundColor: PRIMARY_COLOR,
         width: 56,
         height: 56,
         borderRadius: 28,

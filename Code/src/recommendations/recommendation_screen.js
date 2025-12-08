@@ -6,52 +6,56 @@ import { useFocusEffect } from '@react-navigation/native';
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
-const PRIMARY_COLOR = '#4A6572';
+const RecommendationItem = ({ item }) => {
+    // 1. Récupération du thème dans l'item
+    const { theme } = useAuth();
 
-const RecommendationItem = ({ item }) => (
-    <View style={styles.card}>
-        
-        <View style={styles.cardHeader}>
+    return (
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
             
-            <View style={styles.avatarContainer}>
-                {item.photo_profile ? (
-                    <Image 
-                        source={{ uri: item.photo_profile }} 
-                        style={styles.profileImage}
-                    />
-                ) : (
-                    <View style={styles.initialsContainer}>
-                        <Text style={styles.initialsText}>
-                            {item.sender_name ? item.sender_name.charAt(0).toUpperCase() : '?'}
-                        </Text>
-                    </View>
-                )}
+            <View style={styles.cardHeader}>
+                
+                <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
+                    {item.photo_profile ? (
+                        <Image 
+                            source={{ uri: item.photo_profile }} 
+                            style={styles.profileImage}
+                        />
+                    ) : (
+                        <View style={styles.initialsContainer}>
+                            <Text style={styles.initialsText}>
+                                {item.sender_name ? item.sender_name.charAt(0).toUpperCase() : '?'}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+                
+                <View style={styles.headerContent}>
+                    <Text style={[styles.senderIntroText, { color: theme.subText }]}>
+                        <Text style={[styles.username, { color: theme.primary }]}>{item.sender_name}</Text> recommande :
+                    </Text>
+                    <Text style={[styles.movieTitle, { color: theme.text }]} numberOfLines={1}>{item.movie_title}</Text>
+                </View>
             </View>
             
-            <View style={styles.headerContent}>
-                <Text style={styles.senderIntroText}>
-                    <Text style={styles.username}>{item.sender_name}</Text> recommande :
-                </Text>
-                <Text style={styles.movieTitle} numberOfLines={1}>{item.movie_title}</Text>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+            <View style={styles.messageContainer}>
+                 <Text style={[styles.reasonLabel, { color: theme.subText }]}>Pourquoi ce film :</Text>
+                <Text style={[styles.reasonText, { color: theme.text }]}>{item.message}</Text>
+            </View>
+            
+            <View style={[styles.reactionPill, { backgroundColor: theme.dark ? '#333' : '#F0F7F9' }]}>
+                <Text style={[styles.reactionLabel, { color: theme.primary }]}>Réaction :</Text>
+                <Text style={styles.reactionEmoji}>{item.emoji}</Text>
             </View>
         </View>
-        
-        <View style={styles.divider} />
-
-        <View style={styles.messageContainer}>
-             <Text style={styles.reasonLabel}>Pourquoi ce film :</Text>
-            <Text style={styles.reasonText}>{item.message}</Text>
-        </View>
-        
-        <View style={styles.reactionPill}>
-            <Text style={styles.reactionLabel}>Réaction :</Text>
-            <Text style={styles.reactionEmoji}>{item.emoji}</Text>
-        </View>
-    </View>
-);
+    );
+};
 
 export default function Recommendation({ navigation }) {
-    const { user } = useAuth(); 
+    // 2. Récupération du thème dans l'écran principal
+    const { user, theme } = useAuth(); 
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -60,7 +64,6 @@ export default function Recommendation({ navigation }) {
         if (!user) return;
 
         try {
-            // appel api
             const result = await executeQuery('get_my_recommendations', { user_id: user.id });
             
             if (result.success) {
@@ -73,7 +76,6 @@ export default function Recommendation({ navigation }) {
         }
     };
 
-    // reload pour voir nouvelle
     useFocusEffect(
         useCallback(() => {
             fetchRecommendations();
@@ -88,14 +90,14 @@ export default function Recommendation({ navigation }) {
 
     return (
         <SafeAreaProvider>
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
 
-                <View style={styles.headerContainer}>
-                    <Text style={styles.screenTitle}>Recommandation</Text>
+                <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+                    <Text style={[styles.screenTitle, { color: theme.primary }]}>Recommandation</Text>
                 </View>
                 
                 {loading && !refreshing ? (
-                    <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+                    <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
                 ) : (
                     <FlatList
                         data={recommendations}
@@ -104,18 +106,18 @@ export default function Recommendation({ navigation }) {
                         contentContainerStyle={styles.listContent}
                         showsVerticalScrollIndicator={false}
                         refreshControl={
-                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
                         }
                         ListEmptyComponent={
                             <View style={{alignItems:'center', marginTop: 50}}>
-                                <Text style={{color:'#888'}}>Aucune recommandation reçue pour le moment.</Text>
+                                <Text style={{color: theme.subText}}>Aucune recommandation reçue pour le moment.</Text>
                             </View>
                         }
                     />
                 )}
 
                 <TouchableOpacity 
-                    style={styles.fab} 
+                    style={[styles.fab, { backgroundColor: theme.primary }]} 
                     onPress={() => navigation.navigate('AddRecommendation')}
                 >
                     <Ionicons name="add" size={32} color="#fff" />
@@ -129,26 +131,24 @@ export default function Recommendation({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        // background géré dynamiquement
     },
     headerContainer: {
         paddingHorizontal: 20,
         paddingVertical: 15,
-        backgroundColor: '#fff',
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        // colors gérées dynamiquement
     },
     screenTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: PRIMARY_COLOR,
+        // color gérée dynamiquement
     },
     listContent: {
         padding: 20,
         paddingBottom: 80,
     },
     card: {
-        backgroundColor: '#fff',
         borderRadius: 16,
         padding: 15, 
         marginBottom: 15,
@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        // bg géré dynamiquement
     },
     cardHeader: {
         flexDirection: 'row',
@@ -169,21 +170,21 @@ const styles = StyleSheet.create({
     },
     senderIntroText: {
         fontSize: 14,
-        color: '#666',
+        // color gérée dynamiquement
     },
     username: {
         fontWeight: 'bold',
-        color: PRIMARY_COLOR,
+        // color gérée dynamiquement
     },
     avatarContainer: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: PRIMARY_COLOR,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
         flexShrink: 0,
+        // bg géré dynamiquement
     },
     profileImage: {
         width: '100%',
@@ -204,8 +205,8 @@ const styles = StyleSheet.create({
     movieTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
         marginTop: 2,
+        // color gérée dynamiquement
     },
     messageContainer: {
         paddingVertical: 10,
@@ -213,32 +214,32 @@ const styles = StyleSheet.create({
     reasonLabel: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#888',
         marginBottom: 4,
+        // color gérée dynamiquement
     },
     reasonText: {
         fontSize: 16,
-        color: '#444',
         lineHeight: 22,
+        // color gérée dynamiquement
     },
     divider: {
         height: 1,
-        backgroundColor: '#E0E0E0',
+        // bg géré dynamiquement
     },
     reactionPill: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#F0F7F9',
         borderRadius: 10,
         paddingHorizontal: 10,
         paddingVertical: 8,
         marginTop: 10,
+        // bg géré dynamiquement
     },
     reactionLabel: {
         fontSize: 14,
-        color: PRIMARY_COLOR,
         fontWeight: '600',
+        // color gérée dynamiquement
     },
     reactionEmoji: {
         fontSize: 24,
@@ -247,7 +248,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         right: 30,
-        backgroundColor: PRIMARY_COLOR,
         width: 56,
         height: 56,
         borderRadius: 28,
@@ -258,5 +258,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 }, 
         shadowOpacity: 0.3, 
         shadowRadius: 3,
+        // bg géré dynamiquement
     },
 });

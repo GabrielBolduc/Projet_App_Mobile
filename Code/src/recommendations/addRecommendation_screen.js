@@ -6,8 +6,6 @@ import { executeQuery } from '../services/api';
 import { useAuth } from '../context/authContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
-const TEXT_COLOR = '#333';
-const SUBTLE_COLOR = '#999';
 
 const EMOJI_OPTIONS = [
     { value: '🏆', icon: '🏆', name: "Chef d'œuvre" },
@@ -25,16 +23,14 @@ const EMOJI_OPTIONS = [
 ];
 
 export default function AddRecommendationScreen({ navigation }) {
-    const { user } = useAuth(); // user connecter
+    const { user, theme } = useAuth(); 
     
     const [movieName, setMovieName] = useState('');
     const [explanation, setExplanation] = useState('');
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [selectedEmoji, setSelectedEmoji] = useState(null);
-    
     const [selectedMovie, setSelectedMovie] = useState(null);
 
-    // listes amis et films
     const [friendsList, setFriendsList] = useState([]);
     const [moviesList, setMoviesList] = useState([]);
     
@@ -48,7 +44,6 @@ export default function AddRecommendationScreen({ navigation }) {
         const loadData = async () => {
             if (!user) return;
             try {
-                // recupere amis
                 const friendsRes = await executeQuery('get_my_friends', { user_id: user.id });
                 if (friendsRes.success) {
                     setFriendsList(friendsRes.data.map(f => ({
@@ -58,7 +53,6 @@ export default function AddRecommendationScreen({ navigation }) {
                     })));
                 }
 
-                // recupere films
                 const moviesRes = await executeQuery('get_all_movies');
                 if (moviesRes.success) {
                     setMoviesList(moviesRes.data.map(m => ({
@@ -76,7 +70,6 @@ export default function AddRecommendationScreen({ navigation }) {
         loadData();
     }, [user]);
 
-    // envoie recommandation
     const handleShare = async () => {
         if (!selectedMovie || !explanation || !selectedFriend || !selectedEmoji) {
             Alert.alert("Erreur", "Vous devez remplir tous les champs");
@@ -120,21 +113,19 @@ export default function AddRecommendationScreen({ navigation }) {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
 
             <ScrollView contentContainerStyle={styles.content}>
                 
-                {/* btn retour */}    
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
+                    <Ionicons name="arrow-back" size={24} color={theme.primary} />
                 </TouchableOpacity>
                 
-                <Text style={styles.sectionTitle}>Ajouter une Recommandation</Text>
+                <Text style={[styles.sectionTitle, { color: theme.primary }]}>Ajouter une Recommandation</Text>
 
-
-                <Text style={styles.label}>Pour qui ?</Text>
+                <Text style={[styles.label, { color: theme.subText }]}>Pour qui ?</Text>
                     <TouchableOpacity 
-                        style={[styles.input, styles.dropdownTrigger]}
+                        style={[styles.input, styles.dropdownTrigger, { backgroundColor: theme.card, borderColor: theme.border }]}
                         onPress={() => {
                             setIsFriendDropdownOpen(!isFriendDropdownOpen);
                             setIsMovieDropdownOpen(false);
@@ -143,7 +134,7 @@ export default function AddRecommendationScreen({ navigation }) {
                     >
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         {selectedFriend && selectedFriend.photo_profile ? (
-                            <View style={[styles.avatarContainerSmall, { marginRight: 10, backgroundColor: 'transparent' }]}>
+                            <View style={[styles.avatarContainerSmall, { marginRight: 10 }]}>
                                 <Image 
                                     source={{ uri: selectedFriend.photo_profile }}
                                     style={styles.profileImageSmall}
@@ -153,42 +144,42 @@ export default function AddRecommendationScreen({ navigation }) {
                             <Ionicons 
                                 name="person-outline" 
                                 size={20} 
-                                color={selectedFriend ? PRIMARY_COLOR : SUBTLE_COLOR} 
+                                color={selectedFriend ? theme.primary : theme.subText} 
                                 style={{ marginRight: 10 }} 
                             />
                         )}
-                        <Text style={{ color: selectedFriend ? TEXT_COLOR : SUBTLE_COLOR, fontSize: 16 }}>
+                        <Text style={{ color: selectedFriend ? theme.text : theme.subText, fontSize: 16 }}>
                             {selectedFriend ? selectedFriend.name : "Sélectionner un ami"}
                         </Text>
                     </View>
-                    <Ionicons name={isFriendDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={SUBTLE_COLOR} />
+                    <Ionicons name={isFriendDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={theme.subText} />
                 </TouchableOpacity>
 
                 {isFriendDropdownOpen && (
-                    <View style={styles.dropdownList}>
+                    <View style={[styles.dropdownList, { backgroundColor: theme.card, borderColor: theme.border }]}>
                         <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 200 }}>
                             {friendsList.length === 0 ? (
-                                <Text style={{padding:15, color:SUBTLE_COLOR, textAlign:'center'}}>Aucun ami trouvé.</Text>
+                                <Text style={{padding:15, color: theme.subText, textAlign:'center'}}>Aucun ami trouvé.</Text>
                             ) : (
                                 friendsList.map((friend) => (
                                     <TouchableOpacity 
                                         key={friend.id} 
-                                        style={styles.dropdownItem}
+                                        style={[styles.dropdownItem, { borderBottomColor: theme.border, backgroundColor: theme.card }]}
                                         onPress={() => handleSelectFriend(friend)}
                                     >
-                                        <View style={styles.avatarContainerSmall}>
+                                        <View style={[styles.avatarContainerSmall, {backgroundColor: theme.background}]}>
                                             {friend.photo_profile ? (
                                                 <Image 
                                                     source={{ uri: friend.photo_profile }} 
                                                     style={styles.profileImageSmall} 
                                                 />
                                             ) : (
-                                                <Ionicons name="person-circle" size={30} color={PRIMARY_COLOR} />
+                                                <Ionicons name="person-circle" size={30} color={theme.primary} />
                                             )}
                                         </View>
-                                        <Text style={styles.dropdownItemText}>{friend.name}</Text>
+                                        <Text style={[styles.dropdownItemText, { color: theme.text }]}>{friend.name}</Text>
                                         {selectedFriend?.id === friend.id && (
-                                            <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
+                                            <Ionicons name="checkmark" size={20} color={theme.primary} style={{ marginLeft: 'auto' }} />
                                         )}
                                     </TouchableOpacity>
                                 ))
@@ -197,9 +188,9 @@ export default function AddRecommendationScreen({ navigation }) {
                     </View>
                 )}
 
-                <Text style={styles.label}>Quel film ?</Text>
+                <Text style={[styles.label, { color: theme.subText }]}>Quel film ?</Text>
                 <TouchableOpacity 
-                    style={[styles.input, styles.dropdownTrigger]}
+                    style={[styles.input, styles.dropdownTrigger, { backgroundColor: theme.card, borderColor: theme.border }]}
                     onPress={() => {
                         setIsMovieDropdownOpen(!isMovieDropdownOpen);
                         setIsFriendDropdownOpen(false);
@@ -210,31 +201,31 @@ export default function AddRecommendationScreen({ navigation }) {
                         <Ionicons 
                             name="film-outline" 
                             size={20} 
-                            color={selectedMovie ? PRIMARY_COLOR : SUBTLE_COLOR} 
+                            color={selectedMovie ? theme.primary : theme.subText} 
                             style={{ marginRight: 10 }} 
                         />
-                        <Text style={{ color: selectedMovie ? TEXT_COLOR : SUBTLE_COLOR, fontSize: 16 }}>
+                        <Text style={{ color: selectedMovie ? theme.text : theme.subText, fontSize: 16 }}>
                             {selectedMovie ? selectedMovie.title : "Sélectionner un film"}
                         </Text>
                     </View>
-                    <Ionicons name={isMovieDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={SUBTLE_COLOR} />
+                    <Ionicons name={isMovieDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={theme.subText} />
                 </TouchableOpacity>
 
                 {isMovieDropdownOpen && (
-                    <View style={styles.dropdownList}>
+                    <View style={[styles.dropdownList, { backgroundColor: theme.card, borderColor: theme.border }]}>
                         <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 200 }}>
                             {moviesList.length === 0 ? (
-                                <Text style={{padding:15, color:SUBTLE_COLOR, textAlign:'center'}}>Aucun film trouvé.</Text>
+                                <Text style={{padding:15, color: theme.subText, textAlign:'center'}}>Aucun film trouvé.</Text>
                             ) : (
                                 moviesList.map((movie) => (
                                     <TouchableOpacity 
                                         key={movie.id} 
-                                        style={styles.dropdownItem}
+                                        style={[styles.dropdownItem, { borderBottomColor: theme.border, backgroundColor: theme.card }]}
                                         onPress={() => handleSelectMovie(movie)}
                                     >
-                                        <Text style={styles.dropdownItemText}>{movie.title}</Text>
+                                        <Text style={[styles.dropdownItemText, { color: theme.text }]}>{movie.title}</Text>
                                         {selectedMovie?.id === movie.id && (
-                                            <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
+                                            <Ionicons name="checkmark" size={20} color={theme.primary} style={{ marginLeft: 'auto' }} />
                                         )}
                                     </TouchableOpacity>
                                 ))
@@ -243,25 +234,26 @@ export default function AddRecommendationScreen({ navigation }) {
                     </View>
                 )}
 
-                <Text style={styles.label}>Pourquoi ?</Text>
+                <Text style={[styles.label, { color: theme.subText }]}>Pourquoi ?</Text>
                 <TextInput
-                    style={[styles.input, styles.multilineInput]}
+                    style={[styles.input, styles.multilineInput, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
                     placeholder="Pourquoi ce film ?"
-                    placeholderTextColor={SUBTLE_COLOR}
+                    placeholderTextColor={theme.subText}
                     value={explanation}
                     onChangeText={setExplanation}
                     multiline={true}
                     numberOfLines={4}
                 />
                 
-                <Text style={styles.typeLabel}>Votre réaction</Text>
+                <Text style={[styles.typeLabel, { color: theme.text }]}>Votre réaction</Text>
                 <View style={styles.emojiGrid}>
                     {EMOJI_OPTIONS.map((option, index) => (
                         <TouchableOpacity
                             key={index}
                             style={[
                                 styles.emojiCard,
-                                selectedEmoji === option.value && styles.emojiCardSelected
+                                { backgroundColor: theme.card },
+                                selectedEmoji === option.value && [styles.emojiCardSelected, { borderColor: theme.primary, backgroundColor: theme.dark ? '#333' : '#F0F7F9' }]
                             ]}
                             onPress={() => setSelectedEmoji(option.value)}
                         >
@@ -269,7 +261,8 @@ export default function AddRecommendationScreen({ navigation }) {
                             <Text 
                                 style={[
                                     styles.emojiName, 
-                                    selectedEmoji === option.value && styles.emojiNameSelected
+                                    { color: theme.subText },
+                                    selectedEmoji === option.value && [styles.emojiNameSelected, { color: theme.primary }]
                                 ]}
                                 numberOfLines={1} 
                                 adjustsFontSizeToFit
@@ -281,7 +274,7 @@ export default function AddRecommendationScreen({ navigation }) {
                 </View>
 
                 <TouchableOpacity 
-                    style={styles.primaryButton} 
+                    style={[styles.primaryButton, { backgroundColor: theme.primary }]} 
                     onPress={handleShare}
                     disabled={isSending}
                 >
@@ -300,7 +293,6 @@ export default function AddRecommendationScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
     },
     content: {
         padding: 25,
@@ -309,27 +301,22 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: PRIMARY_COLOR,
         marginBottom: 25,
         textAlign: 'center',
     },
     label: {
         fontSize: 14, 
         fontWeight: '600', 
-        color: '#666', 
         marginBottom: 5, 
         marginLeft: 2 
     },
     input: {
-        backgroundColor: '#fff',
-        borderColor: '#E0E0E0',
         borderWidth: 1,
         marginBottom: 15,
         borderRadius: 8,
         height: 50,
         paddingHorizontal: 15,
         fontSize: 16,
-        color: TEXT_COLOR,
         justifyContent: 'center', 
     },
     dropdownTrigger: {
@@ -337,16 +324,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    dropdownTriggerOpen: {
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        borderBottomWidth: 0,
-        marginBottom: 0,
-    },
     dropdownList: {
-        backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
         borderTopWidth: 1,
         borderBottomLeftRadius: 8,
         borderBottomRightRadius: 8,
@@ -358,14 +337,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-        backgroundColor: '#fff',
     },
     avatarContainerSmall: {
         width: 30,
         height: 30,
         borderRadius: 15,
-        backgroundColor: '#E0E0E0',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 10,
@@ -378,7 +354,6 @@ const styles = StyleSheet.create({
     },
     dropdownItemText: {
         fontSize: 16,
-        color: TEXT_COLOR,
         flex: 1,
     },
     multilineInput: {
@@ -389,7 +364,6 @@ const styles = StyleSheet.create({
     typeLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: TEXT_COLOR,
         marginBottom: 10,
     },
     emojiGrid: {
@@ -403,7 +377,6 @@ const styles = StyleSheet.create({
     emojiCard: {
         width: '18%',
         aspectRatio: 1,
-        backgroundColor: '#fff',
         borderRadius: 12,
         paddingVertical: 4,
         justifyContent: 'center',
@@ -418,8 +391,6 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     emojiCardSelected: {
-        borderColor: PRIMARY_COLOR,
-        backgroundColor: '#F0F7F9',
         borderWidth: 2,
     },
     emojiIcon: {
@@ -430,17 +401,14 @@ const styles = StyleSheet.create({
     },
     emojiName: {
         fontSize: 8,
-        color: SUBTLE_COLOR,
         textAlign: 'center',
         paddingHorizontal: 2,
         fontWeight: '500',
     },
     emojiNameSelected: {
-        color: PRIMARY_COLOR,
         fontWeight: 'bold',
     },
     primaryButton: {
-        backgroundColor: PRIMARY_COLOR,
         padding: 15,
         borderRadius: 25,
         alignItems: 'center',
