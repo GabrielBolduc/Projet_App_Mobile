@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api'; 
@@ -53,7 +53,8 @@ export default function AddRecommendationScreen({ navigation }) {
                 if (friendsRes.success) {
                     setFriendsList(friendsRes.data.map(f => ({
                         id: f.id,
-                        name: f.username
+                        name: f.username,
+                        photo_profile: f.photo_profile
                     })));
                 }
 
@@ -80,6 +81,31 @@ export default function AddRecommendationScreen({ navigation }) {
         if (!selectedMovie || !explanation || !selectedFriend || !selectedEmoji) {
             Alert.alert("Erreur", "Vous devez remplir tous les champs");
             return;
+        }
+
+        setIsSending(true);
+
+        try {
+            const result = await executeQuery('send_recommendation', {
+                sender_id: user.id,
+                receiver_id: selectedFriend.id,
+                movie_id: selectedMovie.id,
+                message: explanation,
+                emoji: selectedEmoji
+            });
+
+            if (result.success) {
+                Alert.alert("Succès", `Recommandation envoyée à ${selectedFriend.name}!`);
+                navigation.goBack(); 
+            } else {
+                console.error("Erreur envoi recommandation:", result.error);
+                Alert.alert("Erreur", "Impossible d'envoyer la recommandation.");
+            }
+        } catch (e) {
+            console.error("Erreur réseau envoi:", e);
+            Alert.alert("Erreur", "Problème de connexion.");
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -116,12 +142,21 @@ export default function AddRecommendationScreen({ navigation }) {
                         activeOpacity={0.7}
                     >
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Ionicons 
-                            name="person-outline" 
-                            size={20} 
-                            color={selectedFriend ? PRIMARY_COLOR : SUBTLE_COLOR} 
-                            style={{ marginRight: 10 }} 
-                        />
+                        {selectedFriend && selectedFriend.photo_profile ? (
+                            <View style={[styles.avatarContainerSmall, { marginRight: 10, backgroundColor: 'transparent' }]}>
+                                <Image 
+                                    source={{ uri: selectedFriend.photo_profile }}
+                                    style={styles.profileImageSmall}
+                                />
+                            </View>
+                        ) : (
+                            <Ionicons 
+                                name="person-outline" 
+                                size={20} 
+                                color={selectedFriend ? PRIMARY_COLOR : SUBTLE_COLOR} 
+                                style={{ marginRight: 10 }} 
+                            />
+                        )}
                         <Text style={{ color: selectedFriend ? TEXT_COLOR : SUBTLE_COLOR, fontSize: 16 }}>
                             {selectedFriend ? selectedFriend.name : "Sélectionner un ami"}
                         </Text>
@@ -141,7 +176,16 @@ export default function AddRecommendationScreen({ navigation }) {
                                         style={styles.dropdownItem}
                                         onPress={() => handleSelectFriend(friend)}
                                     >
-                                        <Ionicons name="person-circle" size={30} color={PRIMARY_COLOR} style={{ marginRight: 10 }} />
+                                        <View style={styles.avatarContainerSmall}>
+                                            {friend.photo_profile ? (
+                                                <Image 
+                                                    source={{ uri: friend.photo_profile }} 
+                                                    style={styles.profileImageSmall} 
+                                                />
+                                            ) : (
+                                                <Ionicons name="person-circle" size={30} color={PRIMARY_COLOR} />
+                                            )}
+                                        </View>
                                         <Text style={styles.dropdownItemText}>{friend.name}</Text>
                                         {selectedFriend?.id === friend.id && (
                                             <Ionicons name="checkmark" size={20} color={PRIMARY_COLOR} style={{ marginLeft: 'auto' }} />
@@ -316,6 +360,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
         backgroundColor: '#fff',
+    },
+    avatarContainerSmall: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: '#E0E0E0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+        overflow: 'hidden',
+    },
+    profileImageSmall: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 15,
     },
     dropdownItemText: {
         fontSize: 16,
