@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api'; 
@@ -9,23 +9,38 @@ const PRIMARY_COLOR = '#4A6572';
 const TEXT_COLOR = '#333';
 const SUBTLE_COLOR = '#999';
 
-function UserSearchResultItem({ user }) {
+function UserSearchResultItem({ user, onToggleFollow }) {
+    
+    const buttonProps = {
+        icon: "person-add",
+        color: '#28A745',
+        onPress: () => onToggleFollow(user.id, true) 
+    };
+
     return (
         <View style={styles.card}>
             <View style={styles.userInfo}>
                 <View style={styles.avatarContainer}>
-                    <Ionicons name="person" size={24} color="#fff" />
+                    {user.photo_profile ? (
+                        <Image 
+                            source={{ uri: user.photo_profile }} 
+                            style={styles.profileImage}
+                        />
+                    ) : (
+                        <Ionicons name="person" size={24} color="#fff" />
+                    )}
                 </View>
                 <Text style={styles.userName}>{user.name}</Text>
             </View>
             
             <TouchableOpacity 
                 style={styles.actionButton} 
+                onPress={buttonProps.onPress}
             >
                 <Ionicons 
-                    name={user.isFollowing ? "checkmark-circle" : "person-add"} 
+                    name={buttonProps.icon} 
                     size={28} 
-                    color={user.isFollowing ? PRIMARY_COLOR : '#28A745'}
+                    color={buttonProps.color}
                 />
             </TouchableOpacity>
         </View>
@@ -38,35 +53,68 @@ export default function AddFollower({ navigation }) {
     const [searchResults, setSearchResults] = useState([]); 
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadData = async () => {
-            if (!user) return;
+    const loadData = async () => {
+        if (!user) return;
 
-            try {
-                const friendsRes = await executeQuery('get_my_friends', { user_id: user.id });
-                const followingIds = friendsRes.success ? friendsRes.data.map(f => f.id) : [];
+        try {
+            const friendsRes = await executeQuery('get_my_friends', { user_id: user.id });
+            
+            const followingIds = friendsRes.success ? friendsRes.data.map(f => f.id) : []; 
 
-                const usersRes = await executeQuery('search_users', { query: '' }); 
+            const usersRes = await executeQuery('search_users', { query: '' }); 
 
-                if (usersRes.success) {
-                    const formattedUsers = usersRes.data
-                        .filter(u => u.id !== user.id) 
-                        .map(u => ({
-                            id: u.id,
-                            name: u.username, 
-                            isFollowing: followingIds.includes(u.id)
-                        }));
-                    
-                    setSearchResults(formattedUsers);
-                }
-            } catch (e) {
-                console.error("Erreur chargement utilisateurs:", e);
-            } finally {
-                setLoading(false);
+            if (usersRes.success) {
+                const formattedUsers = usersRes.data
+                    .filter(u => u.id !== user.id)
+                    .filter(u => !followingIds.includes(u.id)) 
+                    .map(u => ({
+                        id: u.id,
+                        name: u.username, 
+                        photo_profile: u.photo_profile,
+                        isFollowing: false
+                    }));
+                
+                setSearchResults(formattedUsers);
             }
-        };
+        } catch (e) {
+            console.error("Erreur chargement utilisateurs:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    useEffect(() => {
         loadData();
     }, [user]);
+    
+    const handleFollowToggle = async (followedId, shouldFollow) => {
+        if (!user) return;
+        
+        if (!shouldFollow) {
+            return;
+        }
+        
+        setLoading(true); 
+
+        try {
+            const result = await executeQuery('follow_user', {
+                follower_id: user.id,
+                followed_id: followedId
+            });
+
+            if (result.success) {
+                await loadData(); 
+            } else {
+                console.error("Erreur follow:", result.error);
+                Alert.alert("Erreur", "Impossible de suivre cet utilisateur.");
+                setLoading(false);
+            }
+        } catch (e) {
+            console.error("Erreur réseau follow:", e);
+            Alert.alert("Erreur", "Problème de connexion.");
+            setLoading(false);
+        } 
+    };
 
     const filteredResults = searchResults.filter(u =>
         u.name.toLowerCase().includes(searchText.toLowerCase())
@@ -75,8 +123,7 @@ export default function AddFollower({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
-
-                {/* btn retour */}    
+   
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={PRIMARY_COLOR} />
                 </TouchableOpacity>
@@ -103,7 +150,10 @@ export default function AddFollower({ navigation }) {
                         data={filteredResults}
                         keyExtractor={item => item.id.toString()}
                         renderItem={({ item }) => (
-                            <UserSearchResultItem user={item} />
+                            <UserSearchResultItem 
+                                user={item} 
+                                onToggleFollow={handleFollowToggle}
+                            />
                         )}
                         contentContainerStyle={styles.listContent}
                         ListEmptyComponent={
@@ -177,6 +227,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
+        overflow: 'hidden',
+    },
+    profileImage: {
+        width: '100%', 
+        height: '100%', 
+        borderRadius: 20,
     },
     userName: {
         fontSize: 16,

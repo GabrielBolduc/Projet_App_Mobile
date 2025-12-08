@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native'; 
@@ -10,25 +10,41 @@ const PRIMARY_COLOR = '#4A6572';
 
 const RecommendationItem = ({ item }) => (
     <View style={styles.card}>
+        
         <View style={styles.cardHeader}>
-            <Ionicons name="person-circle" size={34} color={PRIMARY_COLOR} style={{ marginRight: 8 }} />
-            <Text style={styles.headerText}>
-                <Text style={styles.username}>{item.sender_name}</Text> vous recommande :
-            </Text>
+            
+            <View style={styles.avatarContainer}>
+                {item.photo_profile ? (
+                    <Image 
+                        source={{ uri: item.photo_profile }} 
+                        style={styles.profileImage}
+                    />
+                ) : (
+                    <View style={styles.initialsContainer}>
+                        <Text style={styles.initialsText}>
+                            {item.sender_name ? item.sender_name.charAt(0).toUpperCase() : '?'}
+                        </Text>
+                    </View>
+                )}
+            </View>
+            
+            <View style={styles.headerContent}>
+                <Text style={styles.senderIntroText}>
+                    <Text style={styles.username}>{item.sender_name}</Text> recommande :
+                </Text>
+                <Text style={styles.movieTitle} numberOfLines={1}>{item.movie_title}</Text>
+            </View>
         </View>
-
-        <View style={styles.movieContainer}>
-            <Ionicons name="film-outline" size={20} color="#666" style={{ marginRight: 8 }} />
-            <Text style={styles.movieTitle}>{item.movie_title}</Text>
-        </View>
-
+        
         <View style={styles.divider} />
 
-        <Text style={styles.labelText}>Raison :</Text>
-        <Text style={styles.reasonText}>{item.message}</Text>
-
-        <View style={styles.reactionContainer}>
-            <Text style={styles.labelText}>Réaction :</Text>
+        <View style={styles.messageContainer}>
+             <Text style={styles.reasonLabel}>Pourquoi ce film :</Text>
+            <Text style={styles.reasonText}>{item.message}</Text>
+        </View>
+        
+        <View style={styles.reactionPill}>
+            <Text style={styles.reactionLabel}>Réaction :</Text>
             <Text style={styles.reactionEmoji}>{item.emoji}</Text>
         </View>
     </View>
@@ -98,7 +114,6 @@ export default function Recommendation({ navigation }) {
                     />
                 )}
 
-                {/* btn */}
                 <TouchableOpacity 
                     style={styles.fab} 
                     onPress={() => navigation.navigate('AddRecommendation')}
@@ -135,7 +150,7 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
         borderRadius: 16,
-        padding: 20,
+        padding: 15, 
         marginBottom: 15,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -146,54 +161,87 @@ const styles = StyleSheet.create({
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        paddingBottom: 15,
     },
-    headerText: {
-        fontSize: 16,
-        color: '#555',
+    headerContent: {
+        flex: 1,
+        marginLeft: 10,
+    },
+    senderIntroText: {
+        fontSize: 14,
+        color: '#666',
     },
     username: {
         fontWeight: 'bold',
         color: PRIMARY_COLOR,
     },
-    movieContainer: {
-        flexDirection: 'row',
+    avatarContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: PRIMARY_COLOR,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        overflow: 'hidden',
+        flexShrink: 0,
+    },
+    profileImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 20,
+    },
+    initialsContainer: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    initialsText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     movieTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
+        marginTop: 2,
     },
-    divider: {
-        height: 2,
-        backgroundColor: '#F0F0F0',
-        marginVertical: 10,
+    messageContainer: {
+        paddingVertical: 10,
     },
-    labelText: {
-        fontSize: 14,
+    reasonLabel: {
+        fontSize: 12,
+        fontWeight: '600',
         color: '#888',
-        fontStyle: 'italic',
         marginBottom: 4,
     },
     reasonText: {
         fontSize: 16,
         color: '#444',
-        marginBottom: 15,
         lineHeight: 22,
     },
-    reactionContainer: {
+    divider: {
+        height: 1,
+        backgroundColor: '#E0E0E0',
+    },
+    reactionPill: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9F9F9',
-        padding: 8,
-        borderRadius: 8,
-        alignSelf: 'flex-start',
+        justifyContent: 'space-between',
+        backgroundColor: '#F0F7F9',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        marginTop: 10,
+    },
+    reactionLabel: {
+        fontSize: 14,
+        color: PRIMARY_COLOR,
+        fontWeight: '600',
     },
     reactionEmoji: {
         fontSize: 24,
-        marginLeft: 10,
     },
     fab: {
         position: 'absolute',

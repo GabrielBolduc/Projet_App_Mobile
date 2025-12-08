@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api';
+import { useAuth } from '../context/authContext';
 
 const PRIMARY_COLOR = '#4A6572';
 
-export default function Signup({ navigation }) {
+const fetchRandomProfilePicture = () => {
+    const gender = Math.random() < 0.5 ? 'men' : 'women';
+    const index = Math.floor(Math.random() * 99) + 1; 
+    
+    return `https://randomuser.me/api/portraits/${gender}/${index}.jpg`;
+};
 
-    const [hasProfilePic, setHasProfilePic] = useState(false);
+export default function Signup({ navigation }) {
+    
+    const { login } = useAuth();
+    
+    const [profilePhotoUri, setProfilePhotoUri] = useState(null); 
     
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -16,8 +26,10 @@ export default function Signup({ navigation }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleAvatarPress = () => {
-        setHasProfilePic(!hasProfilePic);
-    }
+        const newUrl = fetchRandomProfilePicture();
+        setProfilePhotoUri(newUrl); 
+        Alert.alert("Photo sélectionnée", `Nouvelle URL: ${newUrl}`);
+    };
 
     const handleSignup = async () => {
         if (!username || !password || !confirmPassword) {
@@ -29,26 +41,50 @@ export default function Signup({ navigation }) {
             return;
         }
 
-       
+        setIsLoading(true);
+
+        const photo_profile = profilePhotoUri || '';
+        
         const result = await executeQuery('create_user', {
             username: username,
             password: password,
-            photo_profile: photoUrl
+            photo_profile: photo_profile 
         });
 
-        setIsLoading(false);
-
         if (result.success) {
-            Alert.alert(
-                "Succès", 
-                "Compte créé avec succès !", 
-                [{ text: "OK", onPress: () => navigation.replace('Home') }]
-            );
+            
+            const loginResult = await executeQuery('login_user', {
+                username: username,
+                password: password
+            });
+
+            setIsLoading(false);
+
+            if (loginResult.success && loginResult.data.length > 0) {
+                const user = loginResult.data[0];
+                login(user);
+                
+                Alert.alert(
+                    "Succès", 
+                    "Compte créé et connexion réussie !", 
+                    [{ text: "OK", onPress: () => navigation.replace('Home') }]
+                );
+            } else {
+                Alert.alert(
+                    "Succès", 
+                    "Compte créé. Veuillez vous connecter manuellement.", 
+                    [{ text: "OK", onPress: () => navigation.replace('Login') }]
+                );
+            }
+
         } else {
-           
+            setIsLoading(false);
+            console.error("Erreur d'inscription:", result.error);
             Alert.alert("Erreur", "Impossible de créer le compte. Ce nom est peut-être déjà pris.");
         }
     };
+
+    const hasProfilePic = !!profilePhotoUri; 
 
     return (
         <SafeAreaView style={styles.container}>
@@ -61,17 +97,22 @@ export default function Signup({ navigation }) {
 
                 <View style={styles.profileSection}>
                     <TouchableOpacity style={styles.avatarContainer} onPress={handleAvatarPress}>
+                        
                         {hasProfilePic ? (
-                            <Ionicons name="person" size={60} color={PRIMARY_COLOR} />
+                            <Image 
+                                source={{ uri: profilePhotoUri }} 
+                                style={styles.profileImage}
+                            />
                         ) : (
                             <Ionicons name="camera-outline" size={40} color="#999" />
                         )}
+
                         <View style={styles.addIconBadge}>
                             <Ionicons name="add" size={16} color="#fff" />
                         </View>
                     </TouchableOpacity>
                     <Text style={styles.avatarText}>
-                        {hasProfilePic ? "Photo ajoutée !" : "Ajouter une photo"}
+                        {hasProfilePic ? "Photo sélectionnée !" : "Ajouter une photo"}
                     </Text>
                 </View>
 
@@ -133,7 +174,27 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 32, fontWeight: 'bold', color: PRIMARY_COLOR, marginBottom: 5 },
     subTitle: { fontSize: 16, color: '#666' },
     profileSection: { alignItems: 'center', marginBottom: 30 },
-    avatarContainer: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E0E0E0', marginBottom: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
+    avatarContainer: { 
+        width: 100, 
+        height: 100, 
+        borderRadius: 50, 
+        backgroundColor: '#fff', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        borderWidth: 1, 
+        borderColor: '#E0E0E0', 
+        marginBottom: 10, 
+        shadowColor: "#000", 
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.1, 
+        shadowRadius: 3, 
+        elevation: 2 
+    },
+    profileImage: {
+        width: '100%', 
+        height: '100%', 
+        borderRadius: 50,
+    },
     addIconBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: PRIMARY_COLOR, width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' },
     avatarText: { color: PRIMARY_COLOR, fontSize: 14, fontWeight: '600' },
     inputContainer: { marginBottom: 20 },
