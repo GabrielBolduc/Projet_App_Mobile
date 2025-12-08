@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native'; 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -38,15 +38,22 @@ export default function Follow({ navigation }) {
     <View style={styles.card}>
         <View style={styles.userInfo}>
             <View style={styles.avatarContainer}>
-                <Text style={{color:'#fff', fontWeight:'bold', fontSize:18}}>
-                    {item.username ? item.username.charAt(0).toUpperCase() : '?'}
-                </Text>
+                {item.photo_profile ? (
+                    <Image 
+                        source={{ uri: item.photo_profile }} 
+                        style={styles.profileImage}
+                    />
+                ) : (
+                    <Text style={{color:'#fff', fontWeight:'bold', fontSize:18}}>
+                        {item.username ? item.username.charAt(0).toUpperCase() : '?'}
+                    </Text>
+                )}
             </View>
             <Text style={styles.title}>{item.username}</Text>
         </View>
         
         <TouchableOpacity 
-            onPress={() => {}} 
+            onPress={() => {}} // Placeholder pour la suppression du follow
         >
             <Ionicons name="close-circle-outline" size={28} color="#D32F2F" />
         </TouchableOpacity>
@@ -66,8 +73,8 @@ export default function Follow({ navigation }) {
         ) : (
             <FlatList
                 data={friends}
+                keyExtractor={item => item.id ? item.id.toString() : item.username} 
                 renderItem={renderItem}
-                keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
@@ -137,6 +144,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
+        overflow: 'hidden',
+    },
+    profileImage: {
+        width: '100%', 
+        height: '100%', 
+        borderRadius: 20,
     },
     title: {
         fontSize: 16,
