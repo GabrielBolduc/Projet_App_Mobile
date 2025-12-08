@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from './context/AuthContext';
-import { executeQuery } from './services/api';
+import { useAuth } from '../context/authContext';
+import { executeQuery } from '../services/api';
 
 const PRIMARY_COLOR = '#4A6572';
 const DANGER_COLOR = '#D32F2F';
