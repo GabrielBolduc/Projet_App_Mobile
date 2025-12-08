@@ -3,10 +3,14 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { executeQuery } from '../services/api'; 
+import { useAuth } from '../context/authContext';
 
 const PRIMARY_COLOR = '#4A6572';
 
 export default function MovieListScreen({ navigation }) {
+  // recup theme
+  const { theme } = useAuth();
+  
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,8 +33,6 @@ export default function MovieListScreen({ navigation }) {
   }, []);
 
   const handleSelectMovie = (movie) => {
-    // CORRECTION NAVIGATION : 
-    // 'merge: true' met à jour l'écran RateMovie en arrière-plan sans en empiler un nouveau.
     navigation.navigate({
       name: 'RateMovie',
       params: { selection: movie },
@@ -39,32 +41,41 @@ export default function MovieListScreen({ navigation }) {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.movieItem} onPress={() => handleSelectMovie(item)}>
+    <TouchableOpacity 
+
+      style={[styles.movieItem, { borderBottomColor: theme.border }]} 
+      onPress={() => handleSelectMovie(item)}
+    >
       <View style={styles.iconContainer}>
-         <Ionicons name="film-outline" size={24} color={PRIMARY_COLOR} />
+         <Ionicons name="film-outline" size={24} color={theme.primary} />
       </View>
       <View style={styles.infoContainer}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.details}>
+        {/* Titre en couleur principale */}
+        <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
+        {/* Détails en couleur secondaire */}
+        <Text style={[styles.details, { color: theme.subText }]}>
           {item.director} • {item.duration} min
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#ccc" />
+      <Ionicons name="chevron-forward" size={20} color={theme.subText} />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+  
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      
+      {/* header */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color={PRIMARY_COLOR} />
+          <Ionicons name="arrow-back" size={28} color={theme.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Liste de films</Text>
+        <Text style={[styles.headerTitle, { color: theme.primary }]}>Liste de films</Text>
         <View style={{ width: 28 }} />
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+        <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
       ) : (
         <FlatList
             data={movies} 
@@ -73,7 +84,7 @@ export default function MovieListScreen({ navigation }) {
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
                 <View style={{flex:1, alignItems:'center', marginTop:50}}>
-                    <Text style={{color: '#888'}}>Aucun film disponible.</Text>
+                    <Text style={{color: theme.subText}}>Aucun film disponible.</Text>
                 </View>
             }
         />
@@ -83,13 +94,44 @@ export default function MovieListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: PRIMARY_COLOR },
-  listContent: { paddingBottom: 20 },
-  movieItem: { flexDirection: 'row', alignItems: 'center', padding: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  iconContainer: { marginRight: 15, width: 40, alignItems: 'center' },
-  infoContainer: { flex: 1 },
-  title: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  details: { fontSize: 14, color: '#666' },
+  container: { 
+    flex: 1, 
+  },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20, 
+    paddingVertical: 15, 
+    borderBottomWidth: 1, 
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+  },
+  listContent: { 
+    paddingBottom: 20, 
+  },
+  movieItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 15, 
+    borderBottomWidth: 1, 
+  },
+  iconContainer: { 
+    marginRight: 15, 
+    width: 40, 
+    alignItems: 'center', 
+  },
+  infoContainer: { 
+    flex: 1, 
+  },
+  title: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    marginBottom: 4, 
+  },
+  details: { 
+    fontSize: 14, 
+  },
 });

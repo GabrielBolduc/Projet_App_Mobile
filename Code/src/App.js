@@ -1,14 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
-import { AuthProvider } from './context/authContext';
-
+import { AuthProvider, useAuth } from './context/authContext'; // Import useAuth
 
 import Feed from './feed/feed_screen';
 import MyRatings from './ratings/myRatings_screen';
@@ -22,15 +20,16 @@ import AddRecommendation from './recommendations/addRecommendation_screen';
 import Login from './auth/login_screen'
 import Signup from './auth/signup_screen';
 
-const PRIMARY_COLOR = '#4A6572';
-
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator(); 
 
+// Composant Barre de Navigation Personnalisée (Adapté au thème)
 function MyTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
+  const { theme } = useAuth(); // Récupère le thème global
+
   return (
-    <View style={[styles.tabContainer, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.tabContainer, { paddingBottom: insets.bottom, backgroundColor: theme.card, borderTopColor: theme.border }]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
@@ -59,7 +58,7 @@ function MyTabBar({ state, descriptors, navigation }) {
             onPress={onPress}
             style={styles.tabItem}
           >
-            <Ionicons name={iconName} size={24} color={isFocused ? PRIMARY_COLOR : '#888'} />
+            <Ionicons name={iconName} size={24} color={isFocused ? theme.primary : theme.subText} />
           </TouchableOpacity>
         );
       })}
@@ -82,45 +81,62 @@ function HomeTabs() {
   );
 }
 
+// Composant principal qui contient la Navigation
+function AppContent() {
+    const { theme } = useAuth();
+
+    // Création d'un thème compatible React Navigation
+    const MyNavigationTheme = {
+        dark: theme.dark,
+        colors: {
+            primary: theme.primary,
+            background: theme.background,
+            card: theme.card,
+            text: theme.text,
+            border: theme.border,
+            notification: theme.danger,
+        },
+    };
+
+    return (
+        <NavigationContainer theme={MyNavigationTheme}>
+            <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
+            <Stack.Navigator 
+                screenOptions={{ headerShown: false }}
+                initialRouteName='Login'
+            >
+                <Stack.Screen name="Login" component={Login} />
+                <Stack.Screen name="Signup" component={Signup} />
+                <Stack.Screen name="Home" component={HomeTabs} />
+                
+                {/* Modal et autres écrans */}
+                <Stack.Screen 
+                    name="RateMovie" 
+                    component={RateMovieScreen} 
+                    options={{ presentation: 'modal' }}
+                />
+                <Stack.Screen name="MovieList" component={MovieList} />
+                <Stack.Screen name="AddFollower" component={AddFollower} />
+                <Stack.Screen name="AddRecommendation" component={AddRecommendation} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
 export default function App() {
   return (
-    // ON ENVELOPPE TOUTE L'APP AVEC LE PROVIDER
     <AuthProvider>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <Stack.Navigator 
-            screenOptions={{ headerShown: false }}
-            initialRouteName='Login'
-          >
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Signup" component={Signup} />
-            
-            <Stack.Screen name="Home" component={HomeTabs} />
-            
-            {/* Modal et autres écrans */}
-            <Stack.Screen 
-                name="RateMovie" 
-                component={RateMovieScreen} 
-                options={{ presentation: 'modal' }}
-            />
-            <Stack.Screen name="MovieList" component={MovieList} />
-            <Stack.Screen name="AddFollower" component={AddFollower} />
-            <Stack.Screen name="AddRecommendation" component={AddRecommendation} />
-            
-          </Stack.Navigator>
-        </NavigationContainer>
+         <AppContent />
       </SafeAreaProvider>
     </AuthProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
   },
   tabItem: {
     flex: 1,

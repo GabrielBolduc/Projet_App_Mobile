@@ -6,9 +6,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
-const PRIMARY_COLOR = '#4A6572';
-const TEXT_COLOR = '#333';
-const SUBTLE_COLOR = '#888';
+// Les constantes de couleurs fixes sont remplacées par le thème dynamique
+const PRIMARY_COLOR = '#4A6572'; 
 
 function StarRating({ rating }) {
   const stars = [];
@@ -28,45 +27,42 @@ function StarRating({ rating }) {
 
 // review card
 function ReviewCard({ item, currentUserId }) {
+  const { theme } = useAuth(); // recup theme
+  
   const [reactionState, setReactionState] = useState(item.current_user_reaction || null); 
   const [likesCount, setLikesCount] = useState(item.likes_count || 0);
   const [dislikesCount, setDislikesCount] = useState(item.dislikes_count || 0);
 
+  // update local state quand donne change
+  useEffect(() => {
+    setReactionState(item.current_user_reaction || null);
+    setLikesCount(item.likes_count || 0);
+    setDislikesCount(item.dislikes_count || 0);
+  }, [item]);
+
   const handleReaction = async (newType) => {
-    // Calcul des nouvelles valeurs AVANT de changer l'état
     let nextState = null;
     let nextLikes = likesCount;
     let nextDislikes = dislikesCount;
 
-    // : retire reaction
     if (reactionState === newType) {
       nextState = null; 
-      if (newType === 'like')
-      {
-        nextLikes = Math.max(0, likesCount - 1);
-      }
-      else
-      {
-        nextDislikes = Math.max(0, dislikesCount - 1);
-      } 
+      if (newType === 'like') nextLikes = Math.max(0, likesCount - 1);
+      else nextDislikes = Math.max(0, dislikesCount - 1);
     } 
-    // nouvelle reaction
     else {
       nextState = newType;
-      // Retirer l'ancienne réaction si elle existait
       if (reactionState === 'like') nextLikes = Math.max(0, likesCount - 1);
       if (reactionState === 'dislike') nextDislikes = Math.max(0, dislikesCount - 1);
-      // Ajouter la nouvelle
+      
       if (newType === 'like') nextLikes++;
       else nextDislikes++;
     }
 
-    // maj visuel
     setReactionState(nextState);
     setLikesCount(nextLikes);
     setDislikesCount(nextDislikes);
 
-    // appel api
     if (nextState === null) {
         await executeQuery('remove_reaction', {
             user_id: currentUserId,
@@ -82,18 +78,18 @@ function ReviewCard({ item, currentUserId }) {
   };
 
   return (
-    <View style={styles.reviewCard}>
+    <View style={[styles.reviewCard, { backgroundColor: theme.card }]}>
       {/* header */}
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
              <Text style={{color:'#fff', fontWeight:'bold'}}>
                 {item.username ? item.username.charAt(0).toUpperCase() : '?'}
              </Text>
           </View>
           <View>
-            <Text style={styles.userName}>{item.username}</Text>
-            <Text style={styles.timestamp}>
+            <Text style={[styles.userName, { color: theme.text }]}>{item.username}</Text>
+            <Text style={[styles.timestamp, { color: theme.subText }]}>
                 {item.created_at ? new Date(item.created_at).toLocaleDateString('fr-CA') : ''}
             </Text>
           </View>
@@ -102,15 +98,15 @@ function ReviewCard({ item, currentUserId }) {
 
       {/* content */}
       <View style={styles.cardContent}>
-        <Text style={styles.movieTitle}>{item.movie_title}</Text>
+        <Text style={[styles.movieTitle, { color: theme.text }]}>{item.movie_title}</Text>
         <View style={styles.ratingContainer}>
           <StarRating rating={item.rating} />
         </View>
-        <Text style={styles.commentText}>{item.comment}</Text>
+        <Text style={[styles.commentText, { color: theme.subText }]}>{item.comment}</Text>
       </View>
 
       {/* footer */}
-      <View style={styles.cardFooter}>
+      <View style={[styles.cardFooter, { borderTopColor: theme.border }]}>
         <TouchableOpacity 
           style={styles.reactionButton} 
           onPress={() => handleReaction('like')}
@@ -119,9 +115,9 @@ function ReviewCard({ item, currentUserId }) {
           <Ionicons 
             name={reactionState === 'like' ? "thumbs-up" : "thumbs-up-outline"} 
             size={20} 
-            color={reactionState === 'like' ? PRIMARY_COLOR : SUBTLE_COLOR} 
+            color={reactionState === 'like' ? theme.primary : theme.subText} 
           />
-          <Text style={[styles.reactionCount, {color: reactionState === 'like' ? PRIMARY_COLOR : SUBTLE_COLOR}]}>
+          <Text style={[styles.reactionCount, {color: reactionState === 'like' ? theme.primary : theme.subText}]}>
             {likesCount}
           </Text>
         </TouchableOpacity>
@@ -134,9 +130,9 @@ function ReviewCard({ item, currentUserId }) {
           <Ionicons 
             name={reactionState === 'dislike' ? "thumbs-down" : "thumbs-down-outline"} 
             size={20} 
-            color={reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR} 
+            color={reactionState === 'dislike' ? theme.danger : theme.subText} 
           />
-          <Text style={[styles.reactionCount, {color: reactionState === 'dislike' ? '#D32F2F' : SUBTLE_COLOR}]}>
+          <Text style={[styles.reactionCount, {color: reactionState === 'dislike' ? theme.danger : theme.subText}]}>
             {dislikesCount}
           </Text>
         </TouchableOpacity>
@@ -146,7 +142,7 @@ function ReviewCard({ item, currentUserId }) {
 }
 
 export default function Feed() {
-  const { user } = useAuth();
+  const { user, theme } = useAuth(); // Ajout de 'theme'
   const [popularMovies, setPopularMovies] = useState([]);
   const [feedData, setFeedData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -182,23 +178,23 @@ export default function Feed() {
 
   const renderPopularItem = ({ item }) => (
     <View style={styles.popularCard}>
-      <View style={styles.posterPlaceholder}>
+      <View style={[styles.posterPlaceholder, { backgroundColor: theme.primary }]}>
         <Ionicons name="film-outline" size={32} color="#fff" />
       </View>
-      <Text style={styles.popularTitle} numberOfLines={2}>{item.title}</Text>
-      <Text style={styles.popularDirector} numberOfLines={1}>{item.director}</Text>
+      <Text style={[styles.popularTitle, { color: theme.text }]} numberOfLines={2}>{item.title}</Text>
+      <Text style={[styles.popularDirector, { color: theme.subText }]} numberOfLines={1}>{item.director}</Text>
     </View>
   );
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>Feed</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+           <Text style={[styles.screenTitle, { color: theme.primary }]}>Feed</Text>
         </View>
 
         {loading && !refreshing ? (
-            <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+            <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
         ) : (
             <FlatList
             data={feedData}
@@ -212,11 +208,11 @@ export default function Feed() {
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
             }
             ListHeaderComponent={
                 <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Populaire</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Populaire</Text>
                 <View style={styles.popularListContainer}>
                     {popularMovies.length > 0 ? (
                         popularMovies.map((movie) => (
@@ -225,15 +221,15 @@ export default function Feed() {
                         </View>
                         ))
                     ) : (
-                        <Text style={{color:'#888', fontStyle:'italic'}}>Loading movies...</Text>
+                        <Text style={{color: theme.subText, fontStyle:'italic'}}>Loading movies...</Text>
                     )}
                 </View>
-                <Text style={styles.sectionTitle}>Par vos amis</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Par vos amis</Text>
                 </View>
             }
             ListEmptyComponent={
                 <View style={{alignItems:'center', marginTop: 20}}>
-                    <Text style={{color:'#888'}}>Aucune activité récente.</Text>
+                    <Text style={{color: theme.subText}}>Aucune activité récente.</Text>
                 </View>
             }
             />
@@ -246,19 +242,18 @@ export default function Feed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    // backgroundColor géré dynamiquement
   },
   headerContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    // colors gérées dynamiquement
   },
   screenTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: PRIMARY_COLOR,
+    // color gérée dynamiquement
   },
   listContent: {
     paddingBottom: 20,
@@ -270,7 +265,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: TEXT_COLOR,
     marginBottom: 15,
     marginTop: 5,
   },
@@ -292,22 +286,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    backgroundColor: PRIMARY_COLOR,
   },
   popularTitle: {
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
-    color: TEXT_COLOR,
     marginBottom: 2,
   },
   popularDirector: {
     fontSize: 10,
-    color: SUBTLE_COLOR,
     textAlign: 'center',
   },
   reviewCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 20,
     marginBottom: 15,
     borderRadius: 12,
@@ -332,7 +322,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: PRIMARY_COLOR,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -340,11 +329,9 @@ const styles = StyleSheet.create({
   userName: {
     fontWeight: 'bold',
     fontSize: 14,
-    color: TEXT_COLOR,
   },
   timestamp: {
     fontSize: 12,
-    color: SUBTLE_COLOR,
   },
   cardContent: {
     marginBottom: 10,
@@ -352,21 +339,18 @@ const styles = StyleSheet.create({
   movieTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: TEXT_COLOR,
     marginBottom: 5,
   },
   ratingContainer: {
     marginBottom: 8,
   },
   commentText: {
-    color: '#555',
     lineHeight: 20,
     fontSize: 14,
   },
   cardFooter: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     paddingTop: 10,
     marginTop: 5,
   },

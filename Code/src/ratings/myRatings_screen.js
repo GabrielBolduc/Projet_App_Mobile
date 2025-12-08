@@ -7,8 +7,6 @@ import { executeQuery } from '../services/api';
 import { useAuth } from '../context/authContext'; 
 
 const PRIMARY_COLOR = '#4A6572';
-const TEXT_COLOR = '#333';
-const SUBTLE_COLOR = '#888';
 
 function StarRating({ rating }) {
   const stars = [];
@@ -27,16 +25,15 @@ function StarRating({ rating }) {
 }
 
 export default function MyRatings({ navigation }) {
-  const { user } = useAuth(); // user connecter
+  // recup user et theme
+  const { user, theme } = useAuth(); 
+  
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // charcher donne depuis martha
   const fetchRatings = async () => {
-    
     try {
-        // appel api
         const result = await executeQuery('get_my_ratings', { user_id: user.id });
         
         if (result.success) {
@@ -51,58 +48,55 @@ export default function MyRatings({ navigation }) {
     }
   };
 
-  // reload ecran (pour voir les nouveaux rating)
   useFocusEffect(
     useCallback(() => {
       fetchRatings();
     }, [user])
   );
 
-  // !!!
-  // Pull to refresh
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchRatings();
     setRefreshing(false);
   };
 
-  // navig vers mode edit
   const handleEditPress = (item) => {
     navigation.navigate('RateMovie', { item: item });
   };
 
-  // navig vers mode add
   const handleAddPress = () => {
     navigation.navigate('RateMovie');
   };
 
   const renderRatingItem = ({ item }) => (
     <TouchableOpacity 
-      style={styles.card} 
+      // application couleur dynamique 
+      style={[styles.card, { backgroundColor: theme.card }]} 
       onPress={() => handleEditPress(item)} 
       activeOpacity={0.7}
     >
       <View style={styles.cardContent}>
         {/* header */}
         <View style={styles.cardHeader}>
-          <Text style={styles.movieTitle}>{item.movie_title}</Text>
-          <Text style={styles.dateText}>
+          <Text style={[styles.movieTitle, { color: theme.text }]}>{item.movie_title}</Text>
+          <Text style={[styles.dateText, { color: theme.subText }]}>
             {item.created_at ? new Date(item.created_at).toLocaleDateString('fr-CA') : ''}
           </Text>
         </View>
 
-        {/* etoiles */}
+        {/* stars */}
         <View style={styles.ratingContainer}>
           <StarRating rating={item.rating} />
         </View>
 
         {/* commentaire */}
         {item.comment ? (
-          <Text style={styles.commentText} numberOfLines={3}>
+         
+          <Text style={[styles.commentText, { color: theme.subText }]} numberOfLines={3}>
             {item.comment}
           </Text>
         ) : (
-          <Text style={styles.noCommentText}>Aucun commentaire</Text>
+          <Text style={[styles.noCommentText, { color: theme.subText }]}>Aucun commentaire</Text>
         )}
       </View>
       
@@ -111,16 +105,17 @@ export default function MyRatings({ navigation }) {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
+      {/* 3. Fond d'écran dynamique */}
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         
         {/* header */}
-        <View style={styles.headerContainer}>
-           <Text style={styles.screenTitle}>Mes Ratings</Text>
+        <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+           <Text style={[styles.screenTitle, { color: theme.primary }]}>Mes Ratings</Text>
         </View>
 
         {/* list */}
         {loading && !refreshing ? (
-             <ActivityIndicator size="large" color={PRIMARY_COLOR} style={{marginTop: 50}} />
+             <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
         ) : (
             <FlatList
             data={ratings}
@@ -130,12 +125,12 @@ export default function MyRatings({ navigation }) {
             showsVerticalScrollIndicator={false}
             
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY_COLOR]} />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
             }
             
             ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>Vous n'avez pas encore noté de films.</Text>
+                    <Text style={[styles.emptyText, { color: theme.subText }]}>Vous n'avez pas encore noté de films.</Text>
                 </View>
             }
             />
@@ -143,7 +138,7 @@ export default function MyRatings({ navigation }) {
 
         {/* btn */}
         <TouchableOpacity 
-          style={styles.fab} 
+          style={[styles.fab, { backgroundColor: theme.primary }]} 
           onPress={handleAddPress}
         >
           <Ionicons name="add" size={32} color="#fff" />
@@ -157,36 +152,34 @@ export default function MyRatings({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    // backgroundColor gere dynamiquement
   },
   headerContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    // backgroundColor et borderBottomColor gere dynamiquement
   },
   screenTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: PRIMARY_COLOR,
+    // color gere dynamiquement
   },
   listContent: {
     padding: 20,
     paddingBottom: 80, 
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 15,
     marginBottom: 15,
     flexDirection: 'row', 
     justifyContent: 'space-between',
-    // Ombre
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
+
   },
   cardContent: {
     flex: 1, 
@@ -201,34 +194,34 @@ const styles = StyleSheet.create({
   movieTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: TEXT_COLOR,
     flex: 1, 
     marginRight: 10,
+    // color gere dynamiquement
   },
   dateText: {
     fontSize: 12,
-    color: SUBTLE_COLOR,
+    // color gere dynamiquement
   },
   ratingContainer: {
     marginBottom: 8,
   },
   commentText: {
-    color: '#555',
     fontSize: 14,
     lineHeight: 20,
+    // color gere dynamiquement
   },
   noCommentText: {
-    color: '#aaa',
     fontSize: 14,
     fontStyle: 'italic',
+    // color gere dynamiquement
   },
   emptyContainer: {
     alignItems: 'center',
     marginTop: 50,
   },
   emptyText: {
-    color: SUBTLE_COLOR,
     fontSize: 16,
+    // color gere dynamiquement
   },
   fab: {
     position: 'absolute',
@@ -237,13 +230,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: PRIMARY_COLOR,
     justifyContent: 'center',
     alignItems: 'center',
-    // ombre
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 3,
+    // backgroundColor gere dynamiquement
   },
 });
