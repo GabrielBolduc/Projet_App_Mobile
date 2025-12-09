@@ -114,14 +114,21 @@ export default function AddRecommendationScreen({ navigation }) {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-
-            <ScrollView contentContainerStyle={styles.content}>
+            
+            <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
                 
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={theme.primary} />
                 </TouchableOpacity>
                 
-                <Text style={[styles.sectionTitle, { color: theme.primary }]}>Ajouter une Recommandation</Text>
+                <Text style={[styles.headerTitle, { color: theme.primary }]}>
+                    Ajouter une recommandation
+                </Text>
+                
+                <View style={{ width: 24 }} /> 
+            </View>
+
+            <ScrollView contentContainerStyle={styles.content}>
 
                 <Text style={[styles.label, { color: theme.subText }]}>Pour qui ?</Text>
                     <TouchableOpacity 
@@ -294,15 +301,25 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    header: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        paddingHorizontal: 20, 
+        paddingVertical: 15, 
+        borderBottomWidth: 1, 
+    },
+    headerTitle: { 
+        fontSize: 20, 
+        fontWeight: 'bold',
+    },
     content: {
         padding: 25,
         paddingBottom: 50,
     },
     sectionTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 25,
-        textAlign: 'center',
     },
     label: {
         fontSize: 14, 
