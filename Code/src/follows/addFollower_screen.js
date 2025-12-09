@@ -5,7 +5,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
-// On peut garder cette couleur si elle est commune, sinon utiliser theme.primary
 const PRIMARY_COLOR = '#4A6572';
 
 function UserSearchResultItem({ user, onToggleFollow, theme }) {
@@ -16,7 +15,6 @@ function UserSearchResultItem({ user, onToggleFollow, theme }) {
         onPress: () => onToggleFollow(user.id, true) 
     };
 
-    // Si on voulait gérer le cas "déjà suivi" (même si la liste filtre déjà)
     if (user.isFollowing) {
          buttonProps.icon = "checkmark-circle";
          buttonProps.color = theme.primary;
@@ -71,7 +69,7 @@ export default function AddFollower({ navigation }) {
             if (usersRes.success) {
                 const formattedUsers = usersRes.data
                     .filter(u => u.id !== user.id)
-                    .filter(u => !followingIds.includes(u.id)) // On filtre ceux qu'on suit déjà
+                    .filter(u => !followingIds.includes(u.id)) 
                     .map(u => ({
                         id: u.id,
                         name: u.username, 
@@ -105,7 +103,7 @@ export default function AddFollower({ navigation }) {
             });
 
             if (result.success) {
-                await loadData(); // Recharger la liste pour enlever l'ami ajouté
+                await loadData(); 
             } else {
                 console.error("Erreur follow:", result.error);
                 Alert.alert("Erreur", "Impossible de suivre cet utilisateur.");
@@ -156,7 +154,7 @@ export default function AddFollower({ navigation }) {
                             <UserSearchResultItem 
                                 user={item} 
                                 onToggleFollow={handleFollowToggle}
-                                theme={theme} // On passe le thème à l'item
+                                theme={theme} 
                             />
                         )}
                         contentContainerStyle={styles.listContent}
@@ -173,7 +171,6 @@ export default function AddFollower({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // background géré dynamiquement
     },
     content: {
         flex: 1,
@@ -182,14 +179,12 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        // color gérée dynamiquement
         marginBottom: 20,
         textAlign: 'center',
     },
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        // bg et border gérés dynamiquement
         borderWidth: 1,
         marginBottom: 20,
         borderRadius: 8,
@@ -199,7 +194,6 @@ const styles = StyleSheet.create({
     searchInput: {
         flex: 1,
         fontSize: 16,
-        // color gérée dynamiquement
     },
     listContent: {
         paddingBottom: 20,
@@ -216,7 +210,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        // bg géré dynamiquement
     },
     userInfo: {
         flexDirection: 'row',
@@ -230,7 +223,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 15,
         overflow: 'hidden',
-        // bg géré dynamiquement
     },
     profileImage: {
         width: '100%', 
@@ -240,7 +232,6 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 16,
         fontWeight: '600',
-        // color gérée dynamiquement
     },
     actionButton: {
         padding: 5,
@@ -249,6 +240,5 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 50,
         fontSize: 16,
-        // color gérée dynamiquement
     }
 });

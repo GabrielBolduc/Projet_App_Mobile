@@ -151,7 +151,7 @@ function ReviewCard({ item, currentUserId }) {
 }
 
 export default function Feed() {
-  const { user, theme } = useAuth(); // Ajout de 'theme'
+  const { user, theme } = useAuth(); // Ajout de theme
   const [popularMovies, setPopularMovies] = useState([]);
   const [feedData, setFeedData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -251,18 +251,15 @@ export default function Feed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor géré dynamiquement
   },
   headerContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    // colors gérées dynamiquement
   },
   screenTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    // color gérée dynamiquement
   },
   listContent: {
     paddingBottom: 20,
@@ -316,7 +313,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    // Background géré dynamiquement
   },
   cardHeader: {
     flexDirection: 'row',

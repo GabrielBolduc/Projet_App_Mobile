@@ -55,7 +55,7 @@ export default function Settings({ navigation }) {
             photo_profile: profilePhoto
         });
 
-        Alert.alert("Succès", "Photo de profile modifier");
+        Alert.alert("Succès", "Modifications effectue");
 
     } catch (e) {
         console.error(e);

@@ -7,7 +7,6 @@ import { executeQuery } from '../services/api';
 import { useAuth } from '../context/authContext'; 
 
 const RecommendationItem = ({ item }) => {
-    // 1. Récupération du thème dans l'item
     const { theme } = useAuth();
 
     return (
@@ -54,7 +53,6 @@ const RecommendationItem = ({ item }) => {
 };
 
 export default function Recommendation({ navigation }) {
-    // 2. Récupération du thème dans l'écran principal
     const { user, theme } = useAuth(); 
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -131,18 +129,15 @@ export default function Recommendation({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // background géré dynamiquement
     },
     headerContainer: {
         paddingHorizontal: 20,
         paddingVertical: 15,
         borderBottomWidth: 1,
-        // colors gérées dynamiquement
     },
     screenTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        // color gérée dynamiquement
     },
     listContent: {
         padding: 20,
@@ -157,7 +152,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        // bg géré dynamiquement
     },
     cardHeader: {
         flexDirection: 'row',
@@ -170,11 +164,9 @@ const styles = StyleSheet.create({
     },
     senderIntroText: {
         fontSize: 14,
-        // color gérée dynamiquement
     },
     username: {
         fontWeight: 'bold',
-        // color gérée dynamiquement
     },
     avatarContainer: {
         width: 40,
@@ -184,7 +176,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         overflow: 'hidden',
         flexShrink: 0,
-        // bg géré dynamiquement
     },
     profileImage: {
         width: '100%',
@@ -206,7 +197,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginTop: 2,
-        // color gérée dynamiquement
     },
     messageContainer: {
         paddingVertical: 10,
@@ -215,16 +205,13 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         marginBottom: 4,
-        // color gérée dynamiquement
     },
     reasonText: {
         fontSize: 16,
         lineHeight: 22,
-        // color gérée dynamiquement
     },
     divider: {
         height: 1,
-        // bg géré dynamiquement
     },
     reactionPill: {
         flexDirection: 'row',
@@ -234,12 +221,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 8,
         marginTop: 10,
-        // bg géré dynamiquement
     },
     reactionLabel: {
         fontSize: 14,
         fontWeight: '600',
-        // color gérée dynamiquement
     },
     reactionEmoji: {
         fontSize: 24,
@@ -258,6 +243,5 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 }, 
         shadowOpacity: 0.3, 
         shadowRadius: 3,
-        // bg géré dynamiquement
     },
 });

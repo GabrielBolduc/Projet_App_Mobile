@@ -6,11 +6,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { executeQuery } from '../services/api'; 
 import { useAuth } from '../context/authContext'; 
 
-// On garde PRIMARY_COLOR s'il ne change pas, sinon on peut utiliser theme.primary
 const PRIMARY_COLOR = '#4A6572';
 
 export default function Follow({ navigation }) {
-  // 1. Récupération du thème
   const { user, theme } = useAuth(); 
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +68,6 @@ export default function Follow({ navigation }) {
   };
 
   const renderItem = ({ item }) => (
-    // 2. Application de la couleur de carte dynamique
     <View style={[styles.card, { backgroundColor: theme.card }]}>
         <View style={styles.userInfo}>
             <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
@@ -85,7 +82,6 @@ export default function Follow({ navigation }) {
                     </Text>
                 )}
             </View>
-            
             <Text style={[styles.title, { color: theme.text }]}>{item.username}</Text>
         </View>
         
