@@ -5,7 +5,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS Recommendation;
 DROP TABLE IF EXISTS Reaction;
 DROP TABLE IF EXISTS Follow;
-DROP TABLE IF EXISTS Ratings;
+DROP TABLE IF EXISTS Rating;
 DROP TABLE IF EXISTS Movie;
 DROP TABLE IF EXISTS User;
 
@@ -25,7 +25,7 @@ CREATE TABLE Movie (
     director VARCHAR(50)
 );
 
-CREATE TABLE Ratings (
+CREATE TABLE Rating (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     movie_id INT NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE Reaction (
     type ENUM('like', 'dislike') NOT NULL,
     
     FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
-    FOREIGN KEY (rating_id) REFERENCES Ratings(id) ON DELETE CASCADE,
+    FOREIGN KEY (rating_id) REFERENCES Rating(id) ON DELETE CASCADE,
     
     UNIQUE(user_id, rating_id)
 );
@@ -101,13 +101,13 @@ INSERT INTO Movie (title, duration, director) VALUES
 ('Interstellar', 169, 'Christopher Nolan');
 
 
-INSERT INTO Ratings (user_id, movie_id, rating, comment) VALUES 
+INSERT INTO Rating (user_id, movie_id, rating, comment) VALUES 
 (1, 1, 5, "Un chef d'oeuvre absolu. Visuellement incroyable.");
 
-INSERT INTO Ratings (user_id, movie_id, rating, comment) VALUES 
+INSERT INTO Rating (user_id, movie_id, rating, comment) VALUES 
 (2, 4, 4, "Très sombre, un peu long mais excellent.");
 
-INSERT INTO Ratings (user_id, movie_id, rating, comment) VALUES 
+INSERT INTO Rating (user_id, movie_id, rating, comment) VALUES 
 (3, 3, 3, "Drôle mais sans plus.");
 
 INSERT INTO Follow (follower_id, followed_id) VALUES (1, 2);

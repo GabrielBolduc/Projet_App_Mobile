@@ -21,22 +21,22 @@
   },
   {
     "name": "create_rating",
-    "string": "INSERT INTO Ratings (user_id, movie_id, rating, comment) VALUES (?user_id, ?movie_id, ?rating, \"?comment\");",
+    "string": "INSERT INTO Rating (user_id, movie_id, rating, comment) VALUES (?user_id, ?movie_id, ?rating, \"?comment\");",
     "type": 1
   },
   {
     "name": "get_my_ratings",
-    "string": "SELECT r.id, r.rating, r.comment, r.created_at, m.id as movie_id, m.title as movie_title, m.duration, m.director FROM Ratings r JOIN Movie m ON r.movie_id = m.id WHERE r.user_id=?user_id ORDER BY r.created_at DESC;",
+    "string": "SELECT r.id, r.rating, r.comment, r.created_at, m.id as movie_id, m.title as movie_title, m.duration, m.director FROM Rating r JOIN Movie m ON r.movie_id = m.id WHERE r.user_id=?user_id ORDER BY r.created_at DESC;",
     "type": 0
   },
   {
     "name": "update_rating",
-    "string": "UPDATE Ratings SET rating=?rating, comment=\"?comment\" WHERE id=?id AND user_id=?user_id;",
+    "string": "UPDATE Rating SET rating=?rating, comment=\"?comment\" WHERE id=?id AND user_id=?user_id;",
     "type": 1
   },
   {
     "name": "delete_rating",
-    "string": "DELETE FROM Ratings WHERE id=?id AND user_id=?user_id;",
+    "string": "DELETE FROM Rating WHERE id=?id AND user_id=?user_id;",
     "type": 1
   },
   {
@@ -61,7 +61,7 @@
   },
   {
     "name": "get_feed",
-    "string": "SELECT r.id, r.rating, r.comment, r.created_at, u.username, u.photo_profile, m.title as movie_title, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'like') as likes_count, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'dislike') as dislikes_count, (SELECT type FROM Reaction WHERE rating_id = r.id AND user_id = ?user_id) as current_user_reaction FROM Ratings r JOIN User u ON r.user_id = u.id JOIN Movie m ON r.movie_id = m.id WHERE r.user_id IN (SELECT followed_id FROM Follow WHERE follower_id = ?user_id) OR r.user_id = ?user_id ORDER BY r.created_at DESC;",
+    "string": "SELECT r.id, r.rating, r.comment, r.created_at, u.username, u.photo_profile, m.title as movie_title, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'like') as likes_count, (SELECT COUNT(*) FROM Reaction WHERE rating_id = r.id AND type = 'dislike') as dislikes_count, (SELECT type FROM Reaction WHERE rating_id = r.id AND user_id = ?user_id) as current_user_reaction FROM Rating r JOIN User u ON r.user_id = u.id JOIN Movie m ON r.movie_id = m.id WHERE r.user_id IN (SELECT followed_id FROM Follow WHERE follower_id = ?user_id) OR r.user_id = ?user_id ORDER BY r.created_at DESC;",
     "type": 0
   },
   {
