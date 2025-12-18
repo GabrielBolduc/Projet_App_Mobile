@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native'; 
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, Linking } from 'react-native'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as ImagePicker from 'expo-image-picker';
 import { executeQuery } from '../services/api';
 import { useAuth } from '../context/authContext';
 
 const PRIMARY_COLOR = '#4A6572';
 
-const fetchRandomProfilePicture = () => {
-    const gender = Math.random() < 0.5 ? 'men' : 'women';
-    const index = Math.floor(Math.random() * 99) + 1; 
-    
-    return `https://randomuser.me/api/portraits/${gender}/${index}.jpg`;
-};
 
 export default function Signup({ navigation }) {
     
@@ -25,10 +20,36 @@ export default function Signup({ navigation }) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleAvatarPress = () => {
-        const newUrl = fetchRandomProfilePicture();
-        setProfilePhotoUri(newUrl); 
-        Alert.alert("Photo sélectionnée", `Nouvelle URL: ${newUrl}`);
+    const handleAvatarPress = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (permissionResult.granted === false) {
+            Alert.alert(
+                "Permission requise",
+                "L'accès à la galerie est nécessaire. Voulez-vous ouvrir les paramètres pour l'autoriser ?",
+                [
+                    { text: "Annuler", style: "cancel" },
+                    { 
+                        text: "Ouvrir les paramètres", 
+                        onPress: () => Linking.openSettings()
+                    }
+                ]
+            );
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.1,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const imageUri = `data:image/jpeg;base64,${result.assets[0].base64}`;
+            setProfilePhotoUri(imageUri);
+        }
     };
 
     const handleSignup = async () => {
@@ -112,7 +133,7 @@ export default function Signup({ navigation }) {
                         </View>
                     </TouchableOpacity>
                     <Text style={styles.avatarText}>
-                        {hasProfilePic ? "Photo sélectionnée !" : "Ajouter une photo"}
+                        {hasProfilePic ? "Modifier la photo" : "Ajouter une photo"}
                     </Text>
                 </View>
 
