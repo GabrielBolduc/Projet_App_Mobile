@@ -16,7 +16,7 @@ import MovieList from './movie/movieList_screen'
 import FollowScreen from './follows/follow_screen'
 import Recommendation from './recommendations/recommendation_screen';
 import AddFollower from './follows/addFollower_screen';
-import AddRecommendation from './recommendations/addRecommendation_screen';
+import sendRecommendation from './recommendations/sendRecommendation_screen';
 import Login from './auth/login_screen'
 import Signup from './auth/signup_screen';
 
@@ -117,7 +117,7 @@ function AppContent() {
                 />
                 <Stack.Screen name="MovieList" component={MovieList} />
                 <Stack.Screen name="AddFollower" component={AddFollower} />
-                <Stack.Screen name="AddRecommendation" component={AddRecommendation} />
+                <Stack.Screen name="SendRecommendation" component={sendRecommendation} />
             </Stack.Navigator>
         </NavigationContainer>
     );

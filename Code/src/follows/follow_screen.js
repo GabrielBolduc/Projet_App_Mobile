@@ -100,7 +100,7 @@ export default function Follow({ navigation }) {
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
 
         <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-           <Text style={[styles.screenTitle, { color: theme.primary }]}>Mes follow</Text>
+           <Text style={[styles.screenTitle, { color: theme.primary }]}>Mes Amis</Text>
         </View>
         
         {loading ? (

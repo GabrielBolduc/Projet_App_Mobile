@@ -7,9 +7,12 @@ import { useAuth } from '../context/authContext';
 
 const PRIMARY_COLOR = '#4A6572';
 
-export default function MovieListScreen({ navigation }) {
+export default function MovieListScreen({ navigation, route }) {
   // recup theme
   const { theme } = useAuth();
+
+  // Récupérer le paramètre de l'écran appelant
+  const returnScreen = route.params?.returnScreen;
   
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,11 +36,25 @@ export default function MovieListScreen({ navigation }) {
   }, []);
 
   const handleSelectMovie = (movie) => {
-    navigation.navigate({
-      name: 'RateMovie',
-      params: { selection: movie },
-      merge: true,
-    });
+    if (route.params?.onSelect) {
+      route.params.onSelect(movie);
+      navigation.goBack();
+      return;
+    }
+
+    if (returnScreen) {
+      navigation.navigate({
+        name: returnScreen,
+        params: { selectedMovie: movie },
+        merge: true,
+      });
+    } else {
+      navigation.navigate({
+        name: 'RateMovie',
+        params: { selection: movie },
+        merge: true,
+      });
+    }
   };
 
   const renderItem = ({ item }) => (
