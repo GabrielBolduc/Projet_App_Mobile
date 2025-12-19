@@ -10,10 +10,9 @@ const RecommendationItem = ({ item }) => {
     const { theme } = useAuth();
 
     return (
-        <View style={[styles.card, { backgroundColor: theme.card }]}>
+        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
             
-            <View style={styles.cardHeader}>
-                
+            <View style={styles.headerRow}>
                 <View style={[styles.avatarContainer, { backgroundColor: theme.primary }]}>
                     {item.photo_profile ? (
                         <Image 
@@ -21,33 +20,34 @@ const RecommendationItem = ({ item }) => {
                             style={styles.profileImage}
                         />
                     ) : (
-                        <View style={styles.initialsContainer}>
-                            <Text style={styles.initialsText}>
-                                {item.sender_name ? item.sender_name.charAt(0).toUpperCase() : '?'}
-                            </Text>
-                        </View>
+                        <Text style={styles.initialsText}>
+                            {item.sender_name ? item.sender_name.charAt(0).toUpperCase() : '?'}
+                        </Text>
                     )}
                 </View>
-                
-                <View style={styles.headerContent}>
-                    <Text style={[styles.senderIntroText, { color: theme.subText }]}>
-                        <Text style={[styles.username, { color: theme.primary }]}>{item.sender_name}</Text> recommande :
+
+                <View style={styles.headerTextContainer}>
+                    <Text style={[styles.senderText, { color: theme.subText }]} numberOfLines={1}>
+                        Recommandé par <Text style={[styles.username, { color: theme.primary }]}>{item.sender_name}</Text>
                     </Text>
-                    <Text style={[styles.movieTitle, { color: theme.text }]} numberOfLines={1}>{item.movie_title}</Text>
+                    <Text style={[styles.movieTitle, { color: theme.text }]} numberOfLines={2}>
+                        {item.movie_title}
+                    </Text>
+                </View>
+
+                <View style={[styles.emojiContainer, { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                    <Text style={styles.emojiText}>{item.emoji}</Text>
                 </View>
             </View>
-            
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+            <View style={[styles.separator, { backgroundColor: theme.border }]} />
 
             <View style={styles.messageContainer}>
-                 <Text style={[styles.reasonLabel, { color: theme.subText }]}>Pourquoi ce film :</Text>
-                <Text style={[styles.reasonText, { color: theme.text }]}>{item.message}</Text>
+                <Text style={[styles.messageText, { color: theme.text }]}>
+                    "{item.message}"
+                </Text>
             </View>
-            
-            <View style={[styles.reactionPill, { backgroundColor: theme.dark ? '#333' : '#F0F7F9' }]}>
-                <Text style={[styles.reactionLabel, { color: theme.primary }]}>Réaction :</Text>
-                <Text style={styles.reactionEmoji}>{item.emoji}</Text>
-            </View>
+
         </View>
     );
 };
@@ -91,11 +91,19 @@ export default function Recommendation({ navigation }) {
             <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
 
                 <View style={[styles.headerContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-                    <Text style={[styles.screenTitle, { color: theme.primary }]}>Recommandation</Text>
+                    <Text style={[styles.screenTitle, { color: theme.primary }]}>Recommandations</Text>
+                    <Text style={[styles.subtitle, { color: theme.subText }]}>
+                        {recommendations.length} recommandation{recommendations.length !== 1 ? 's' : ''}
+                    </Text>
                 </View>
                 
                 {loading && !refreshing ? (
-                    <ActivityIndicator size="large" color={theme.primary} style={{marginTop: 50}} />
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={theme.primary} />
+                        <Text style={[styles.loadingText, { color: theme.subText, marginTop: 10 }]}>
+                            Chargement des recommandations...
+                        </Text>
+                    </View>
                 ) : (
                     <FlatList
                         data={recommendations}
@@ -104,11 +112,30 @@ export default function Recommendation({ navigation }) {
                         contentContainerStyle={styles.listContent}
                         showsVerticalScrollIndicator={false}
                         refreshControl={
-                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
+                            <RefreshControl 
+                                refreshing={refreshing} 
+                                onRefresh={onRefresh} 
+                                colors={[theme.primary]} 
+                                tintColor={theme.primary}
+                                title="Tirer pour rafraîchir"
+                                titleColor={theme.subText}
+                            />
                         }
                         ListEmptyComponent={
-                            <View style={{alignItems:'center', marginTop: 50}}>
-                                <Text style={{color: theme.subText}}>Aucune recommandation reçue pour le moment.</Text>
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="film-outline" size={60} color={theme.subText} style={{ opacity: 0.5 }}/>
+                                <Text style={[styles.emptyTitle, { color: theme.text, marginTop: 15 }]}>
+                                    Aucune recommandation
+                                </Text>
+                                <Text style={[styles.emptyText, { color: theme.subText, marginTop: 5 }]}>
+                                    Vos amis n'ont pas encore partagé de recommandations avec vous
+                                </Text>
+                                <TouchableOpacity 
+                                    style={[styles.emptyButton, { backgroundColor: theme.primary, marginTop: 20 }]}
+                                    onPress={() => navigation.navigate('AddRecommendation')}
+                                >
+                                    <Text style={styles.emptyButtonText}>Partager une recommandation</Text>
+                                </TouchableOpacity>
                             </View>
                         }
                     />
@@ -117,8 +144,9 @@ export default function Recommendation({ navigation }) {
                 <TouchableOpacity 
                     style={[styles.fab, { backgroundColor: theme.primary }]} 
                     onPress={() => navigation.navigate('AddRecommendation')}
+                    activeOpacity={0.8}
                 >
-                    <Ionicons name="add" size={32} color="#fff" />
+                    <Ionicons name="add" size={28} color="#fff" />
                 </TouchableOpacity>
 
             </SafeAreaView>
@@ -139,95 +167,50 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
     },
-    listContent: {
-        padding: 20,
-        paddingBottom: 80,
-    },
-    card: {
-        borderRadius: 16,
-        padding: 15, 
-        marginBottom: 15,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingBottom: 15,
-    },
-    headerContent: {
-        flex: 1,
-        marginLeft: 10,
-    },
-    senderIntroText: {
+    subtitle: {
         fontSize: 14,
-    },
-    username: {
-        fontWeight: 'bold',
-    },
-    avatarContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-        flexShrink: 0,
-    },
-    profileImage: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 20,
-    },
-    initialsContainer: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    initialsText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    movieTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
         marginTop: 2,
+        opacity: 0.8,
     },
-    messageContainer: {
-        paddingVertical: 10,
+    listContent: {
+        padding: 16,
+        paddingBottom: 90,
     },
-    reasonLabel: {
-        fontSize: 12,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    reasonText: {
-        fontSize: 16,
-        lineHeight: 22,
-    },
-    divider: {
-        height: 1,
-    },
-    reactionPill: {
-        flexDirection: 'row',
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        marginTop: 10,
     },
-    reactionLabel: {
+    loadingText: {
         fontSize: 14,
-        fontWeight: '600',
     },
-    reactionEmoji: {
-        fontSize: 24,
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 40,
+        paddingTop: 60,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    emptyText: {
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
+        opacity: 0.7,
+    },
+    emptyButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 25,
+    },
+    emptyButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
     },
     fab: {
         position: 'absolute',
@@ -238,10 +221,86 @@ const styles = StyleSheet.create({
         borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 5,
+        elevation: 6,
         shadowColor: "#000", 
-        shadowOffset: { width: 0, height: 2 }, 
-        shadowOpacity: 0.3, 
-        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 3 }, 
+        shadowOpacity: 0.2, 
+        shadowRadius: 4,
+    },
+    card: {
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    avatarContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        marginRight: 12,
+    },
+    profileImage: {
+        width: '100%',
+        height: '100%',
+    },
+    initialsText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    headerTextContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    senderText: {
+        fontSize: 13,
+        marginBottom: 4,
+        opacity: 0.8,
+    },
+    username: {
+        fontWeight: '700',
+    },
+    movieTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        lineHeight: 24,
+    },
+    emojiContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+    },
+    emojiText: {
+        fontSize: 20,
+    },
+    separator: {
+        height: 1,
+        marginVertical: 14,
+        opacity: 0.3,
+    },
+    messageContainer: {
+        paddingHorizontal: 4,
+    },
+    messageText: {
+        fontSize: 15,
+        lineHeight: 22,
+        fontStyle: 'italic',
+        opacity: 0.9,
     },
 });
