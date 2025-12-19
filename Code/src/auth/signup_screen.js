@@ -34,7 +34,7 @@ export default function Signup({ navigation }) {
                         onPress: () => Linking.openSettings()
                     }
                 ]
-            );
+            )
             return;
         }
 

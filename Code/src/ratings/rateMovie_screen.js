@@ -87,7 +87,7 @@ export default function RateMovieScreen({ navigation, route }) {
   };
 
   const handleDelete = () => {
-    Alert.alert("Supprimer", "Voulez-vous vraiment supprimer cet avis ?", [
+    Alert.alert("Supprimer", "Voulez-vous supprimer cet avis ?", [
       { text: "Annuler", style: "cancel" },
       { text: "Supprimer", style: "destructive", onPress: async () => {
           setIsSubmitting(true);
